@@ -13,7 +13,7 @@ distance_km <- 100
 co2_emissions <- calculate_f150_co2(distance_km)
 co2_emissions
 
-stoken <- httr::config(token = strava_oauth("emissions", app_client_id = "147439", app_secret = "5ebd35cce184b0bf26bf4196f3f1eed28502525d", app_scope = "activity:read_all"))
+stoken <- httr::config(token = strava_oauth("emissions", app_client_id = "147439", app_secret = Sys.getenv("STRAVA_SECRET"), app_scope = "activity:read_all"))
 
 
 stoken <- httr::config(token = strava_oauth(app_name, app_client_id, app_secret, app_scope="activity:read_all"))

@@ -9,6 +9,7 @@
 <meta name="author" content="Alex MacPhail">
 <meta name="author" content="Catherine Shier">
 <meta name="author" content="Erin Bayne">
+<meta name="dcterms.date" content="2025-02-16">
 
 <title>Analyzing natural area sensitivity thresholds for humans and species diversity in Alberta’s Capital City</title>
 <style>
@@ -56,6 +57,21 @@ div.csl-indent {
 <script src="sens-thresh_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="sens-thresh_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="sens-thresh_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="sens-thresh_files/libs/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet">
+<script src="sens-thresh_files/libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<script src="sens-thresh_files/libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<link href="sens-thresh_files/libs/leaflet-1.3.1/leaflet.css" rel="stylesheet">
+<script src="sens-thresh_files/libs/leaflet-1.3.1/leaflet.js"></script>
+<link href="sens-thresh_files/libs/leafletfix-1.0.0/leafletfix.css" rel="stylesheet">
+<script src="sens-thresh_files/libs/proj4-2.6.2/proj4.min.js"></script>
+<script src="sens-thresh_files/libs/Proj4Leaflet-1.0.1/proj4leaflet.js"></script>
+<link href="sens-thresh_files/libs/rstudio_leaflet-1.3.1/rstudio_leaflet.css" rel="stylesheet">
+<script src="sens-thresh_files/libs/leaflet-binding-2.2.2/leaflet.js"></script>
+<link href="sens-thresh_files/libs/leaflet-measure-2.1.7/leaflet-measure.css" rel="stylesheet">
+<script src="sens-thresh_files/libs/leaflet-measure-2.1.7/leaflet-measure.min.js"></script>
+<link href="sens-thresh_files/libs/leaflet-minimap-3.3.1/Control.MiniMap.min.css" rel="stylesheet">
+<script src="sens-thresh_files/libs/leaflet-minimap-3.3.1/Control.MiniMap.min.js"></script>
+<script src="sens-thresh_files/libs/leaflet-minimap-3.3.1/Minimap-binding.js"></script>
 
 
 </head>
@@ -68,10 +84,14 @@ div.csl-indent {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#abstract" id="toc-abstract" class="nav-link active" data-scroll-target="#abstract">Abstract</a></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">Methods</a>
   <ul class="collapse">
-  <li><a href="#study-area-and-design" id="toc-study-area-and-design" class="nav-link" data-scroll-target="#study-area-and-design">Study area and design</a></li>
+  <li><a href="#study-area-and-design" id="toc-study-area-and-design" class="nav-link" data-scroll-target="#study-area-and-design">Study area and design</a>
+  <ul class="collapse">
+  <li><a href="#zero-emissions-fieldwork" id="toc-zero-emissions-fieldwork" class="nav-link" data-scroll-target="#zero-emissions-fieldwork">Zero-emissions fieldwork</a></li>
+  </ul></li>
   <li><a href="#mapping-noise-thresholds" id="toc-mapping-noise-thresholds" class="nav-link" data-scroll-target="#mapping-noise-thresholds">Mapping noise thresholds</a></li>
   </ul></li>
   <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">Results</a></li>
@@ -125,7 +145,7 @@ div.csl-indent {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">Invalid Date</p>
+      <p class="date">February 16, 2025</p>
     </div>
   </div>
   
@@ -137,29 +157,59 @@ div.csl-indent {
 </header>
 
 
+<<<<<<< HEAD
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+=======
+<section id="abstract" class="level1">
+<h1>Abstract</h1>
+</section>
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+>>>>>>> main
 <p>Urbanization, driven by globalization and industrialization, leads to higher population densities and significant changes in landscapes (<span class="citation" data-cites="carnahan1974urbanization">Carnahan, Gove, and Galle (<a href="#ref-carnahan1974urbanization" role="doc-biblioref">1974</a>)</span>, <span class="citation" data-cites="berry2008urbanization">Berry (<a href="#ref-berry2008urbanization" role="doc-biblioref">2008</a>)</span>, <span class="citation" data-cites="davis2015urbanization">Davis (<a href="#ref-davis2015urbanization" role="doc-biblioref">2015</a>)</span>). However, urbanization also introduces anthropogenic challenges, such as light and noise pollution, which are closely tied to densely populated areas and have well-established negative effects on human, biodiversity (<span class="citation" data-cites="sordello2020evidence">Sordello et al. (<a href="#ref-sordello2020evidence" role="doc-biblioref">2020</a>)</span>) and ecosystem health. As cities expand, the need for humans to reconnect with nature becomes increasingly critical (<span class="citation" data-cites="pyle2003nature">Pyle (<a href="#ref-pyle2003nature" role="doc-biblioref">2003</a>)</span>, <span class="citation" data-cites="buxton2024mental">Buxton et al. (<a href="#ref-buxton2024mental" role="doc-biblioref">2024</a>)</span>). This reinforces the need for accessible natural spaces within cities. In response, urban planners are integrating green spaces into cities by creating parks and preserving natural areas (<span class="citation" data-cites="mata2020bringing">Mata et al. (<a href="#ref-mata2020bringing" role="doc-biblioref">2020</a>)</span>). Whether urban green spaces can effectively sustain and represent native biodiversity is still being studied as urbanization evolves. Although managed natural areas and green spaces may offer critical habitats, excessive noise pollution can render these spaces unsuitable for species dependent on quiet environments for communication, reproduction, and survival. Even adaptable species face challenges when urban nature design is incomplete or poorly integrated, affecting their fitness and reproductive success.</p>
 <p>Modern urban planning offers an opportunity to address these challenges in a holistic manner. By prioritizing quieter, functional urban spaces through district planning and zoning bylaws, urban designs can reduce noise pollution while offering residents easy access to amenities, including grocery stores, schools, and parks. Public transit improvements indirectly mitigates traffic noise, contributing to healthier urban soundscapes. To reshape urban infrastructure effectively, it is essential to understand the temporal changes and behavioural impacts of noise pollution on both humans and wildlife, which requires continuous, robust environmental monitoring. Advances in acoustic and image monitoring technologies now make such environmental assessments more feasible and cost-effective (<span class="citation" data-cites="buxton2018pairing">Buxton et al. (<a href="#ref-buxton2018pairing" role="doc-biblioref">2018</a>)</span>). However, current monitoring practices often rely on resource-intensive methods, such as moving equipment by trucks, which can contradict environmental stewardship principles.</p>
 <p>In Alberta’s 2021 Census, 82.3% of the population resided in urban areas, with a significant concentration in census metropolitan areas (CMAs) like Edmonton. The City of Edmonton has committed to enhancing its biodiversity through various strategic initiatives, including the <a href="https://www.edmonton.ca/sites/default/files/public-files/assets/PDF/Natural_Connections_-_Strategic_Plan_JUNE_09.pdf?cb=1738466394">Natural Connections Strategic Plan, 2007</a> and the <a href="https://www.edmonton.ca/sites/default/files/public-files/assets/PDF/Edmonton_Biodiversity_Action_Plan_Final.PDF">Biodiversity Action Plan, 2009</a>. In conjunction with the tenants of these plan, this study outlines a long-term environmental monitoring program that also redefines how monitoring is conducted. By implementing zero-emission transportation and employing autonomous recording units, this program will target both noisy and non-noisy and high and low quality habitat areas of Edmonton to monitor the cities’ evolving soundscape as infrastructure changes. These efforts align with the city’s broader vision for increased walking and cycling infrastructure, reducing traffic noise, and fostering sustainable practices.</p>
 <p>This study aims to assess the proportion of natural areas in Edmonton that exceed noise sensitivity thresholds for both people and biodiversity, mapping these thresholds to guide future urban planning decisions. By shifting infrastructure investments from noise mitigation toward sustainable transit, we can create urban environments that are not only quieter but also more harmonious for both human and wildlife populations. Achieving this vision will position Edmonton as a leader in urban biodiversity preservation, sustainable urban living, and environmental stewardship.</p>
 </section>
+<<<<<<< HEAD
 <section id="methods" class="level2">
 <h2 class="anchored" data-anchor-id="methods">Methods</h2>
 <section id="study-area-and-design" class="level3">
 <h3 class="anchored" data-anchor-id="study-area-and-design">Study area and design</h3>
 <section id="zero-emissions-fieldwork" class="level4">
 <h4 class="anchored" data-anchor-id="zero-emissions-fieldwork">Zero-emissions fieldwork</h4>
+=======
+<section id="methods" class="level1">
+<h1>Methods</h1>
+<section id="study-area-and-design" class="level2">
+<h2 class="anchored" data-anchor-id="study-area-and-design">Study area and design</h2>
+<div class="cell" data-layout-align="center">
+<div id="fig-monitoring-locations" class="cell-output-display quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-monitoring-locations-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="leaflet html-widget html-fill-item" id="htmlwidget-6214a17facab489876ca" style="width:100%;height:650px;"></div>
+<script type="application/json" data-for="htmlwidget-6214a17facab489876ca">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"https://openstreetmap.org/copyright/\">OpenStreetMap<\/a>,  <a href=\"https://opendatacommons.org/licenses/odbl/\">ODbL<\/a>"}]},{"method":"addCircleMarkers","args":[[53.526406,53.416769,53.415683,53.413586,53.533324,53.55992,53.55743,53.55887,53.55889],[-113.516648,-113.399244,-113.403985,-113.401972,-113.510945,-113.46603,-113.4561,-113.46415,-113.46166],5,null,null,{"interactive":true,"className":"","stroke":true,"color":"blue","weight":5,"opacity":0.5,"fill":true,"fillColor":"blue","fillOpacity":0.2},null,null,["Location: ADAIR","Location: EDALB04DEC1","Location: EDALB04DEC3","Location: EDALB04DEC4","Location: ENZO","Location: KR-1","Location: KR-10","Location: KR-2","Location: KR-3"],null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]},{"method":"addCircleMarkers","args":[[53.416533,53.4131853,53.4283952,53.4760498,53.547165,53.582332,53.585699,53.5778009,53.5780557,53.572586,53.588089,53.495673,53.588803,53.671813,53.529413,53.456638,53.641263,53.5581149,53.5088367],[-113.398985,-113.6846074,-113.6650991,-113.6402296,-113.6552531,-113.691549,-113.669721,-113.6305823,-113.6567606,-113.5152729,-113.322692,-113.433985,-113.394985,-113.332985,-113.476985,-113.548136,-113.552985,-113.452606,-113.5579972],5,null,null,{"interactive":true,"className":"","stroke":true,"color":"green","weight":5,"opacity":0.5,"fill":true,"fillColor":"green","fillOpacity":0.2},null,null,["Location: EDALB04DEC1","Location: YEGBIRD1","Location: YEGBIRD2","Location: YEGBIRD3","Location: YEGBIRD4","Location: EDALD03HAP1","Location: YEGBIRD5","Location: YEGBIRD6","Location: YEGBIRD7","Location: YEGBIRD8","Location: EDALA03ARM1","Location: EDALB02ROR1","Location: EDALA02KER1","Location: EDALA04HOH1","Location: EDALB01MUT2","Location: EDALC03HOD1","Location: EDALD03GOC1","Location: EDALA01KNR1","Location: ZOO1"],null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]},{"method":"addMeasure","args":[{"position":"topright","primaryLengthUnit":"meters","primaryAreaUnit":"sqmeters","activeColor":"#ABE67E","completedColor":"#C8F2BE","popupOptions":{"className":"leaflet-measure-resultpopup","autoPanPadding":[10,10]},"captureZIndex":10000,"localization":"en","decPoint":".","thousandsSep":","}]},{"method":"addMiniMap","args":[null,null,"bottomleft",150,150,19,19,-5,false,false,false,false,false,false,{"color":"#ff7800","weight":1,"clickable":false},{"color":"#000000","weight":1,"clickable":false,"opacity":0,"fillOpacity":0},{"hideText":"Hide MiniMap","showText":"Show MiniMap"},[]]}],"limits":{"lat":[53.4131853,53.671813],"lng":[-113.691549,-113.322692]}},"evals":[],"jsHooks":[]}</script>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-monitoring-locations-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Monitoring locations
+</figcaption>
+</figure>
+</div>
+</div>
+<section id="zero-emissions-fieldwork" class="level3">
+<h3 class="anchored" data-anchor-id="zero-emissions-fieldwork">Zero-emissions fieldwork</h3>
+>>>>>>> main
 </section>
 </section>
-<section id="mapping-noise-thresholds" class="level3">
-<h3 class="anchored" data-anchor-id="mapping-noise-thresholds">Mapping noise thresholds</h3>
+<section id="mapping-noise-thresholds" class="level2">
+<h2 class="anchored" data-anchor-id="mapping-noise-thresholds">Mapping noise thresholds</h2>
 </section>
 </section>
-<section id="results" class="level2">
-<h2 class="anchored" data-anchor-id="results">Results</h2>
+<section id="results" class="level1">
+<h1>Results</h1>
 </section>
-<section id="discussion" class="level2 unnumbered">
+<section id="discussion" class="level1 unnumbered">
 
 
 </section>

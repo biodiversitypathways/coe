@@ -28,7 +28,37 @@ styles: styles.css
 github: https://github.com/biodiversitypathways/coe
 ---
 
-## Introduction
+```{r}
+#| label: Load packages and authenticate to WildTrax
+#| include: false
+#| echo: false
+#| eval: true
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(leaflet)
+library(wildrtrax)
+library(sf)
+library(ggridges)
+library(scales)
+library(kableExtra)
+library(plotly)
+library(DT)
+
+wt_auth()
+
+coe_2024 <- wt_download_report(1750, 'ARU', 'main', T)
+coe_ini_2025 <- read_csv("urban_monitoring_initial_2025.csv")
+
+load('coe.RData')
+#save.image('coe.RData')
+
+```
+
+# Abstract
+
+# Introduction
 
 Urbanization, driven by globalization and industrialization, leads to higher population densities and significant changes in landscapes (@carnahan1974urbanization, @berry2008urbanization, @davis2015urbanization). However, urbanization also introduces anthropogenic challenges, such as light and noise pollution, which are closely tied to densely populated areas and have well-established negative effects on human, biodiversity (@sordello2020evidence) and ecosystem health. As cities expand, the need for humans to reconnect with nature becomes increasingly critical (@pyle2003nature, @buxton2024mental). This reinforces the need for accessible natural spaces within cities. In response, urban planners are integrating green spaces into cities by creating parks and preserving natural areas (@mata2020bringing). Whether urban green spaces can effectively sustain and represent native biodiversity is still being studied as urbanization evolves. Although managed natural areas and green spaces may offer critical habitats, excessive noise pollution can render these spaces unsuitable for species dependent on quiet environments for communication, reproduction, and survival. Even adaptable species face challenges when urban nature design is incomplete or poorly integrated, affecting their fitness and reproductive success.
 
@@ -38,14 +68,55 @@ In Alberta's 2021 Census, 82.3% of the population resided in urban areas, with a
 
 This study aims to assess the proportion of natural areas in Edmonton that exceed noise sensitivity thresholds for both people and biodiversity, mapping these thresholds to guide future urban planning decisions. By shifting infrastructure investments from noise mitigation toward sustainable transit, we can create urban environments that are not only quieter but also more harmonious for both human and wildlife populations. Achieving this vision will position Edmonton as a leader in urban biodiversity preservation, sustainable urban living, and environmental stewardship.
 
-## Methods
+# Methods
 
-### Study area and design
+## Study area and design
 
-#### Zero-emissions fieldwork
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#| message: false
+#| include: true
+#| fig-align: center
+#| fig-width: 10
+#| fig-height: 10
+#| fig-cap: Monitoring locations
+#| label: fig-monitoring-locations
 
-### Mapping noise thresholds
 
-## Results
+coe_2024_locs <- coe_2024 |>
+  select(location, latitude, longitude) |>
+  distinct() |>
+  sf::st_as_sf(coords = c("longitude","latitude"), crs = 4326)
 
-## Discussion
+coe_ini_2025 <- coe_ini_2025 %>%
+  st_as_sf(wkt = "WKT", crs = 4326)
+
+leaflet() %>%
+  addTiles() %>%  # Add default OpenStreetMap map tiles
+  addCircleMarkers(
+    data = coe_2024_locs,
+    popup = ~paste("Location:", coe_2024_locs$location),
+    radius = 5,
+    color = "blue"  # Correct argument name
+  ) %>%
+  addCircleMarkers(
+    data = coe_ini_2025,
+    popup = ~paste("Location:", coe_ini_2025$location),
+    radius = 5,
+    color = "green"  # Correct argument name
+  ) %>%
+  addMeasure(primaryLengthUnit = "meters", primaryAreaUnit = "sqmeters") %>%
+  addMiniMap(position = "bottomleft")
+
+
+```
+
+### Zero-emissions fieldwork
+
+## Mapping noise thresholds
+
+# Results
+
+# Discussion

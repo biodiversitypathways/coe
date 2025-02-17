@@ -81,8 +81,6 @@ This study aims to assess the proportion of natural areas in Edmonton that excee
 
 # Methods
 
-## Study area and design
-
 ```{r}
 #| echo: false
 #| eval: true
@@ -124,7 +122,68 @@ leaflet() %>%
 
 ```
 
+## Site selection and study design
+
+The methodology for identifying potential and final monitoring sites was based on several overlapping objectives related to goals of the overall study. First, natural areas were the primarily selection criteria. Using several GIS approaches were combined to satisfy these objectives: Multi-criteria analysis (MCA), location-allocation modelling (LAM), and constrained random allocation, natural areas were categorized into a categorical gradient of noise conditions. This entailed ensuring monitoring sites captured as much of the city as possible, noise levels where residents are concentrated, and a variety of land uses. Complementing this were categorical candidate sites of particular and general interest. 
+
+```{r}
+
+dem <- st_read("./DEM/DEM_Points_3TM.shp")
+
+veg_areas <- read_csv("Vegetation_Areas_-_Naturalized_20250217.csv") |>
+  st_as_sf(wkt = "Multipolygon", crs = 4326)
+
+# Define custom colors: green for "Parks" and purple for others
+custom_colors <- c("Parks" = "#4CAF50", "Other" = "#9C27B0") # Vibrant purple for "Other"
+
+# Plot the spatial data with the additional points layer
+ggplot(data = veg_areas) +
+  geom_sf(aes(fill = ifelse(Maintainer == "Parks", "Parks", "Other")), color = "black", alpha = 0.7) + # Polygons
+  geom_sf(data = coe_ini_2025, aes(color = "Locations"), size = 2) + # Points layer
+  scale_fill_manual(values = custom_colors, name = "Maintainer") +
+  scale_color_manual(values = c("Locations" = "blue"), name = "Locations") + # Blue color for points
+  theme_minimal() +
+  labs(
+    title = "Vegetation Areas with Locations",
+    fill = "Maintainer",
+    color = "Legend"
+  ) +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(size = 16, face = "bold"),
+    legend.title = element_text(size = 12)
+  )
+
+
+```
+
+
 ### Zero-emissions fieldwork
+
+```{r}
+calculate_f150_co2 <- function(distance_km) {
+  # Assumptions
+  fuel_efficiency_l_per_100km <- 15.7  # Ford F-150 city fuel efficiency (L/100 km)
+  co2_per_liter <- 2.31               # kg CO2 per liter for gasoline
+  # Convert distance to fuel consumed (liters)
+  fuel_used <- (distance_km / 100) * fuel_efficiency_l_per_100km
+  # Calculate CO2 emissions (kg)
+  co2_emissions <- fuel_used * co2_per_liter
+  return(co2_emissions)
+}
+
+distance_km <- 100
+co2_emissions <- calculate_f150_co2(distance_km)
+co2_emissions
+
+stoken <- httr::config(token = strava_oauth("emissions", app_client_id = "147439", app_secret = Sys.getenv("STRAVA_SECRET"), app_scope = "activity:read_all"))
+
+
+stoken <- httr::config(token = strava_oauth(app_name, app_client_id, app_secret, app_scope="activity:read_all"))
+my_acts <- get_activity_list(stoken, after = as.Date('2020-12-31'))
+
+
+```
 
 ## Mapping noise thresholds
 

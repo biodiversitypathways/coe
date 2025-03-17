@@ -4,8 +4,22 @@ format:
   html:
     grid:
       margin-width: 300px
-navbar: right
+website:
+  sidebar:
+    style: "docked"
+    search: true
+    contents:
+      - text: "Home"
+        href: sens-thresh.qmd
+      - section: "Introduction"
+        href: intro.qmd
+  navbar:
+    - icon: github
+      menu:
+          - text: Source Code
+            href: https://github.com/biodiversitypathways/coe
 theme: cosmo
+page-layout: article
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 author: 
   - name: "Alex MacPhail"
@@ -24,9 +38,10 @@ toc: true
 toc-depth: 3
 toc-expand: true
 toc-location: left
-styles: styles.css
 github: https://github.com/biodiversitypathways/coe
 ---
+
+![](./assets/yegbanner.jpg){style="float:left`;" fig-alt="YEG Banner" fig-align="center"}
 
 ```{r}
 #| label: Load packages and data
@@ -62,131 +77,14 @@ load('coe.RData')
 wt_auth()
 
 coe_2024 <- wt_download_report(1750, 'ARU', 'main', T)
-coe_ini_2025 <- read_csv("urban_monitoring_initial_2025.csv")
-
-
-```
-
-# Abstract
-
-# Introduction
-
-Urbanization, driven by globalization and industrialization, leads to higher population densities and significant changes in landscapes (@carnahan1974urbanization, @berry2008urbanization, @davis2015urbanization). However, urbanization also introduces anthropogenic challenges, such as light and noise pollution, which are closely tied to densely populated areas and have well-established negative effects on human, biodiversity (@sordello2020evidence) and ecosystem health. As cities expand, the need for humans to reconnect with nature becomes increasingly critical (@pyle2003nature, @buxton2024mental). This reinforces the need for accessible natural spaces within cities. In response, urban planners are integrating green spaces into cities by creating parks and preserving natural areas (@mata2020bringing). Whether urban green spaces can effectively sustain and represent native biodiversity is still being studied as urbanization evolves. Although managed natural areas and green spaces may offer critical habitats, excessive noise pollution can render these spaces unsuitable for species dependent on quiet environments for communication, reproduction, and survival. Even adaptable species face challenges when urban nature design is incomplete or poorly integrated, affecting their fitness and reproductive success.
-
-Modern urban planning offers an opportunity to address these challenges in a holistic manner. By prioritizing quieter, functional urban spaces through district planning and zoning bylaws, urban designs can reduce noise pollution while offering residents easy access to amenities, including grocery stores, schools, and parks. Public transit improvements indirectly mitigates traffic noise, contributing to healthier urban soundscapes. To reshape urban infrastructure effectively, it is essential to understand the temporal changes and behavioural impacts of noise pollution on both humans and wildlife, which requires continuous, robust environmental monitoring. Advances in acoustic and image monitoring technologies now make such environmental assessments more feasible and cost-effective (@buxton2018pairing). However, current monitoring practices often rely on resource-intensive methods, such as moving equipment by trucks, which can contradict environmental stewardship principles.
-
-In Alberta's 2021 Census, 82.3% of the population resided in urban areas, with a significant concentration in census metropolitan areas (CMAs) like Edmonton. The City of Edmonton has committed to enhancing its biodiversity through various strategic initiatives, including the [Natural Connections Strategic Plan, 2007](https://www.edmonton.ca/sites/default/files/public-files/assets/PDF/Natural_Connections_-_Strategic_Plan_JUNE_09.pdf?cb=1738466394) and the [Biodiversity Action Plan, 2009](https://www.edmonton.ca/sites/default/files/public-files/assets/PDF/Edmonton_Biodiversity_Action_Plan_Final.PDF). In conjunction with the tenants of these plan, this study outlines a long-term environmental monitoring program that also redefines how monitoring is conducted. By implementing zero-emission transportation and employing autonomous recording units, this program will target both noisy and non-noisy and high and low quality habitat areas of Edmonton to monitor the cities' evolving soundscape as infrastructure changes. These efforts align with the city’s broader vision for increased walking and cycling infrastructure, reducing traffic noise, and fostering sustainable practices.
-
-This study aims to assess the proportion of natural areas in Edmonton that exceed noise sensitivity thresholds for both people and biodiversity, mapping these thresholds to guide future urban planning decisions. By shifting infrastructure investments from noise mitigation toward sustainable transit, we can create urban environments that are not only quieter but also more harmonious for both human and wildlife populations. Achieving this vision will position Edmonton as a leader in urban biodiversity preservation, sustainable urban living, and environmental stewardship.
-
-# Methods
-
-```{r}
-#| echo: false
-#| eval: true
-#| warning: false
-#| message: false
-#| include: true
-#| fig-align: center
-#| fig-width: 10
-#| fig-height: 10
-#| fig-cap: Monitoring locations
-#| label: fig-monitoring-locations
-
-
-coe_2024_locs <- coe_2024 |>
-  select(location, latitude, longitude) |>
-  distinct() |>
-  sf::st_as_sf(coords = c("longitude","latitude"), crs = 4326)
-
-coe_ini_2025 <- coe_ini_2025 %>%
-  st_as_sf(wkt = "WKT", crs = 4326)
-
-leaflet() %>%
-  addTiles() %>%  # Add default OpenStreetMap map tiles
-  addCircleMarkers(
-    data = coe_2024_locs,
-    popup = ~paste("Location:", coe_2024_locs$location),
-    radius = 5,
-    color = "blue"  # Correct argument name
-  ) %>%
-  addCircleMarkers(
-    data = coe_ini_2025,
-    popup = ~paste("Location:", coe_ini_2025$location),
-    radius = 5,
-    color = "green"  # Correct argument name
-  ) %>%
-  addMeasure(primaryLengthUnit = "meters", primaryAreaUnit = "sqmeters") %>%
-  addMiniMap(position = "bottomleft")
-
+coe_ini_2025 <- read_csv("YEG25-InitialSites.csv") |> st_as_sf(coords = c("longitude","latitude"), crs = 4326)
 
 ```
 
-## Site selection and study design
+# What's all this noise about?
 
-The methodology for identifying potential and final monitoring sites was based on several overlapping objectives related to goals of the overall study. First, natural areas were the primarily selection criteria. Using several GIS approaches were combined to satisfy these objectives: Multi-criteria analysis (MCA), location-allocation modelling (LAM), and constrained random allocation, natural areas were categorized into a categorical gradient of noise conditions. This entailed ensuring monitoring sites captured as much of the city as possible, noise levels where residents are concentrated, and a variety of land uses. Complementing this were categorical candidate sites of particular and general interest. 
+Urban noise is increasingly recognized for its detrimental effects on both human health and biodiversity. This project initiates a long-term monitoring effort to assess the impact of urban noise on natural areas within the City of Edmonton. The goal is to develop a comprehensive framework and actionable tools to reduce noise pollution and support urban biodiversity monitoring, fostering quieter, more sustainable urban environments. This project is in collaboration with the City of Edmonton, University of Alberta and the [SENSR](sensr.ca) unit of [Biodiversity Pathways Ltd.](https://biodiversitypathways.ca/), itself a national subsidiary of the [Alberta Biodiversity Monitoring Institute](abmi.ca), which is a not-for-profit that tracks changes in wildlife and their habitats across Alberta, working collaboratively to provide ongoing, relevant, and scientifically credible information about our living resources.
 
-```{r}
-
-dem <- st_read("./DEM/DEM_Points_3TM.shp")
-
-veg_areas <- read_csv("Vegetation_Areas_-_Naturalized_20250217.csv") |>
-  st_as_sf(wkt = "Multipolygon", crs = 4326)
-
-# Define custom colors: green for "Parks" and purple for others
-custom_colors <- c("Parks" = "#4CAF50", "Other" = "#9C27B0") # Vibrant purple for "Other"
-
-# Plot the spatial data with the additional points layer
-ggplot(data = veg_areas) +
-  geom_sf(aes(fill = ifelse(Maintainer == "Parks", "Parks", "Other")), color = "black", alpha = 0.7) + # Polygons
-  geom_sf(data = coe_ini_2025, aes(color = "Locations"), size = 2) + # Points layer
-  scale_fill_manual(values = custom_colors, name = "Maintainer") +
-  scale_color_manual(values = c("Locations" = "blue"), name = "Locations") + # Blue color for points
-  theme_minimal() +
-  labs(
-    title = "Vegetation Areas with Locations",
-    fill = "Maintainer",
-    color = "Legend"
-  ) +
-  theme(
-    legend.position = "bottom",
-    plot.title = element_text(size = 16, face = "bold"),
-    legend.title = element_text(size = 12)
-  )
-
-
-```
-
-
-### Zero-emissions fieldwork
-
-```{r}
-calculate_f150_co2 <- function(distance_km) {
-  # Assumptions
-  fuel_efficiency_l_per_100km <- 15.7  # Ford F-150 city fuel efficiency (L/100 km)
-  co2_per_liter <- 2.31               # kg CO2 per liter for gasoline
-  # Convert distance to fuel consumed (liters)
-  fuel_used <- (distance_km / 100) * fuel_efficiency_l_per_100km
-  # Calculate CO2 emissions (kg)
-  co2_emissions <- fuel_used * co2_per_liter
-  return(co2_emissions)
-}
-
-distance_km <- 100
-co2_emissions <- calculate_f150_co2(distance_km)
-co2_emissions
-
-stoken <- httr::config(token = strava_oauth("emissions", app_client_id = "147439", app_secret = Sys.getenv("STRAVA_SECRET"), app_scope = "activity:read_all"))
-
-
-stoken <- httr::config(token = strava_oauth(app_name, app_client_id, app_secret, app_scope="activity:read_all"))
-my_acts <- get_activity_list(stoken, after = as.Date('2020-12-31'))
-
-
-```
-
-## Mapping noise thresholds
-
-# Results
-
-# Discussion
+::: {.callout-note collapse="true" style="background-color: #f4f4f4; padding: 20px;"}
+This report is dynamically generated, meaning its results may evolve with the addition of new data or further analyses. For the most recent updates, refer to the publication date and feel free to reach out to the authors.
+:::

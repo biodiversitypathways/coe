@@ -5,14 +5,6 @@ format:
     grid:
       margin-width: 300px
 website:
-  sidebar:
-    style: "docked"
-    search: true
-    contents:
-      - text: "Home"
-        href: sens-thresh.qmd
-      - section: "Introduction"
-        href: intro.qmd
   navbar:
     - icon: github
       menu:
@@ -85,6 +77,180 @@ coe_ini_2025 <- read_csv("YEG25-InitialSites.csv") |> st_as_sf(coords = c("longi
 
 Urban noise is increasingly recognized for its detrimental effects on both human health and biodiversity. This project initiates a long-term monitoring effort to assess the impact of urban noise on natural areas within the City of Edmonton. The goal is to develop a comprehensive framework and actionable tools to reduce noise pollution and support urban biodiversity monitoring, fostering quieter, more sustainable urban environments. This project is in collaboration with the City of Edmonton, University of Alberta and the [SENSR](sensr.ca) unit of [Biodiversity Pathways Ltd.](https://biodiversitypathways.ca/), itself a national subsidiary of the [Alberta Biodiversity Monitoring Institute](abmi.ca), which is a not-for-profit that tracks changes in wildlife and their habitats across Alberta, working collaboratively to provide ongoing, relevant, and scientifically credible information about our living resources.
 
+<div style="display: flex; justify-content: space-around; padding: 20px;">
+  <a href="https://sensr.ca" target="_blank" style="text-decoration: none;">
+    <img src="https://via.placeholder.com/50?text=SENSR" alt="SENSR" style="width: 50px; height: 50px; border-radius: 50%;"/>
+  </a>
+  <a href="https://biodiversitypathways.ca" target="_blank" style="text-decoration: none;">
+    <img src="https://via.placeholder.com/50?text=BP" alt="Biodiversity Pathways" style="width: 50px; height: 50px; border-radius: 50%;"/>
+  </a>
+  <a href="https://abmi.ca" target="_blank" style="text-decoration: none;">
+    <img src="https://via.placeholder.com/50?text=ABMI" alt="ABMI" style="width: 50px; height: 50px; border-radius: 50%;"/>
+  </a>
+</div>
+
+dunluce tree stand
+st albert trail 136 st
+rampart 
+crystallina nera
+
+
 ::: {.callout-note collapse="true" style="background-color: #f4f4f4; padding: 20px;"}
 This report is dynamically generated, meaning its results may evolve with the addition of new data or further analyses. For the most recent updates, refer to the publication date and feel free to reach out to the authors.
+:::
+
+# Introduction
+
+Urbanization, driven by globalization and industrialization, leads to higher population densities and significant changes in landscapes (@carnahan1974urbanization, @berry2008urbanization, @davis2015urbanization). However, urbanization also introduces anthropogenic challenges, such as light and noise pollution, which are closely tied to densely populated areas and have well-established negative effects on human, biodiversity (@sordello2020evidence) and ecosystem health. As cities expand, the need for humans to reconnect with nature becomes increasingly critical (@pyle2003nature, @buxton2024mental). This reinforces the need for accessible natural spaces within cities. In response, urban planners are integrating green spaces into cities by creating parks and preserving natural areas (@mata2020bringing). Whether urban green spaces can effectively sustain and represent native biodiversity is still being studied as urbanization evolves. Although managed natural areas and green spaces may offer critical habitats, excessive noise pollution can render these spaces unsuitable for species dependent on quiet environments for communication, reproduction, and survival. Even adaptable species face challenges when urban nature design is incomplete or poorly integrated, affecting their fitness and reproductive success.
+
+Modern urban planning offers an opportunity to address these challenges in a holistic manner. By prioritizing quieter, functional urban spaces through district planning and zoning bylaws, urban designs can reduce noise pollution while offering residents easy access to amenities, including grocery stores, schools, and parks. Public transit improvements indirectly mitigates traffic noise, contributing to healthier urban soundscapes. To reshape urban infrastructure effectively, it is essential to understand the temporal changes and behavioural impacts of noise pollution on both humans and wildlife, which requires continuous, robust environmental monitoring. Advances in acoustic and image monitoring technologies now make such environmental assessments more feasible and cost-effective (@buxton2018pairing). However, current monitoring practices often rely on resource-intensive methods, such as moving equipment by trucks, which can contradict environmental stewardship principles.
+
+In Alberta's 2021 Census, 82.3% of the population resided in urban areas, with a significant concentration in census metropolitan areas (CMAs) like Edmonton. The City of Edmonton has committed to enhancing its biodiversity through various strategic initiatives, including the [Natural Connections Strategic Plan, 2007](https://www.edmonton.ca/sites/default/files/public-files/assets/PDF/Natural_Connections_-_Strategic_Plan_JUNE_09.pdf?cb=1738466394) and the [Biodiversity Action Plan, 2009](https://www.edmonton.ca/sites/default/files/public-files/assets/PDF/Edmonton_Biodiversity_Action_Plan_Final.PDF). In conjunction with the tenants of these plan, this study outlines a long-term environmental monitoring program that also redefines how monitoring is conducted. By implementing zero-emission transportation and employing autonomous recording units, this program will target both noisy and non-noisy and high and low quality habitat areas of Edmonton to monitor the cities' evolving soundscape as infrastructure changes. These efforts align with the city’s broader vision for increased walking and cycling infrastructure, reducing traffic noise, and fostering sustainable practices.
+
+This study aims to assess the proportion of natural areas in Edmonton that exceed noise sensitivity thresholds for both people and biodiversity, mapping these thresholds to guide future urban planning decisions. By shifting infrastructure investments from noise mitigation toward sustainable transit, we can create urban environments that are not only quieter but also more harmonious for both human and wildlife populations. Achieving this vision will position Edmonton as a leader in urban biodiversity preservation, sustainable urban living, and environmental stewardship.
+
+# Methods
+
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#| message: false
+#| include: true
+#| fig-align: center
+#| fig-width: 10
+#| fig-height: 10
+#| fig-cap: Monitoring locations
+#| label: fig-monitoring-locations
+
+coe_2024_locs_buffered <- coe_2024_locs |> 
+  sf::st_buffer(dist = 400) |> 
+  sf::st_transform(crs = 4326)
+
+coe_2025_locs_buffered <- coe_ini_2025 |> 
+  sf::st_buffer(dist = 400) |> 
+  sf::st_transform(crs = 4326)
+
+leaflet() %>%
+  addTiles() %>%  # Add default OpenStreetMap map tiles
+  addPolygons(
+    data = coe_2025_locs_buffered,
+    popup = ~paste("Location:", coe_2025_locs_buffered$location),
+    color = "blue", # Buffer color
+    fillOpacity = 0.3
+  ) %>%
+  addMeasure(primaryLengthUnit = "meters", primaryAreaUnit = "sqmeters") %>%
+  addMiniMap(position = "bottomleft")
+```
+
+## Site selection and study design
+
+The methodology for identifying potential and final monitoring sites was based on a multi-objective framework aligned with the overarching goals of the long-term urban biodiversity and noise monitoring initiative. The study area encompassed the City of Edmonton, with a particular emphasis on its natural areas, urban green spaces, and transitional zones between urban landscapes. This approach aimed to representatively capture spatial heterogeneity in biodiversity and noise levels across the city. To ensure comprehensive data collection, we designed the study to encompass a wide range of land-use types, including residential, commercial, industrial, and recreational areas. By stratifying site selection based on land-use categories and proximity to noise sources such as major roads, railways, and urban green spaces, we sought to capture the full variability of soundscapes. Spatial analysis tools in R, were used to overlay land-use maps with noise modeling data to refine site selection. Additionally, accessibility and logistical considerations were factored into final site selection.
+
+## Acoustic data collection
+
+Acoustic biodiversity data were collected using a mix of Wildlife Acoustics SM4 and SM Mini 2 equipped with stereo-microphone stubs. These devices were selected for their portability, reliability, and ability to record high-fidelity audio across a broad frequency range, enabling the detection of most acoustic biodiversity. The recorders were programmed to capture throughout the day to capture the relative noisescape and during critical periods such as dawn and dusk periods. To quantify sound pressure levels, we deployed NSRT_mk4 sound level meters including a Type 1 digital MEMS microphone. The NSRT_mk4’s accurate date/time clock and non-volatile 128 Mb recording memory ensured robust data logging even in challenging environmental conditions. Noise metrics, including equivalent continuous sound level (Leq), maximum and minimum sound levels (Lmax and Lmin), and frequency-specific sound pressure levels, were recorded. To contextualize the acoustic data, environmental covariates such as temperature, humidity, and vegetation cover were also recorded.
+
+```{r}
+
+# Calculated outside R for now
+#dem <- st_read("geospatial_assets/DEM/DEM_Points_3TM.shp")
+#dem_wgs84 <- st_transform(dem, crs = 4326)
+#intersection_result <- st_intersection(dem_wgs84, coe_ini_2025)
+
+veg_areas <- read_csv("geospatial_assets/Vegetation_Areas_-_Naturalized_20250217.csv") |>
+  st_as_sf(wkt = "Multipolygon", crs = 4326)
+
+bike_routes <- st_read("geospatial_assets/Bike_Routes/Bike_Routes.shp")
+
+roads <- st_read("geospatial_assets/Roads/Roads.shp")
+
+# Define custom colors: green for "Parks" and purple for others
+custom_colors <- c("Parks" = "#4CAF50", "Other" = "#9C27B0") # Vibrant purple for "Other"
+
+# Plot the spatial data with the additional points layer
+ggplot(data = veg_areas) +
+  geom_sf(aes(fill = ifelse(Maintainer == "Parks", "Parks", "Other")), alpha = 0.7) + # Polygons
+  geom_sf(data = bike_routes, aes(color = "grey", size = 1)) +
+  geom_sf(data = roads, aes(color = "black", size = 2)) +
+  geom_sf(data = coe_ini_2025, aes(color = "Locations"), size = 4) + # Points layer 
+  scale_fill_manual(values = custom_colors, name = "Maintainer") +
+  scale_color_manual(values = c("Locations" = "blue"), name = "Locations") + # Blue color for points
+  theme_minimal() +
+  labs(
+    title = "Parks Sites, Bike Routes and Initial Locations",
+    fill = "Maintainer",
+    color = "Legend"
+  ) +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(size = 16, face = "bold"),
+    legend.title = element_text(size = 12)
+  )
+
+
+```
+
+## Acoustic data processing
+
+Acoustic data were transferred to the University of Alberta Data Centre in Edmonton for redundant data storage under [WildTrax](https://wildtrax.ca). The recordings were standardized to ensure adherence to the naming convention of `LOCATION_DATETIME`, such as `YEG25-1_20250625_053500.wav`. All recordings designated for processing were directly uploaded to WildTrax and can be downloaded from the platform's Recording tab, accessible under Manage \> Download list of recordings (see @fig-download-recs). Data processing also took place in WildTrax, using the 1SPT method (species-individual per task or time to first detection) with the goal to describe the acoustic community of species heard. The full acoustic community was analyzed including birds, mammals, amphibians, including a relative environment noise assessment (i.e. wind, rain and anthropogenic noise) To ensure balanced replication, four randomly selected recordings were processed for 3-minutes during the morning hours of 5:00 AM - 7:59 AM and dusk hours between 20:00 - 22:59 ideally on four separate dates, during optimal weather conditions. All recordings were simulatenously run through both BirdNET and HawkEars multi-species classifiers to determine false negative and positive rates at the location level for all the media collected, as well as to determine classifier performance.
+
+## Mapping noise thresholds
+
+## Zero-emissions fieldwork
+
+We used [Strava API](https://www.strava.com/settings/api) through [rstrava](https://github.com/fawda123/rStrava) to map the bike trips we took. We then estimated the city-miles traveled in a gas-powered F-150, a standard vehicle used for city operations. We also calculate the average road infrastructure cost savings performed instead of using vehicles.
+
+```{r}
+calculate_f150_co2 <- function(distance_km) {
+  # Assumptions
+  fuel_efficiency_l_per_100km <- 15.7  # Ford F-150 city fuel efficiency (L/100 km)
+  co2_per_liter <- 2.31               # kg CO2 per liter for gasoline
+  # Convert distance to fuel consumed (liters)
+  fuel_used <- (distance_km / 100) * fuel_efficiency_l_per_100km
+  # Calculate CO2 emissions (kg)
+  co2_emissions <- fuel_used * co2_per_liter
+  return(co2_emissions)
+}
+
+distance_km <- 100
+co2_emissions <- calculate_f150_co2(distance_km)
+co2_emissions
+
+#stoken <- httr::config(token = strava_oauth("emissions", app_client_id = "147439", app_secret = Sys.getenv("STRAVA_SECRET"), app_scope = "activity:read_all"))
+
+
+#stoken <- httr::config(token = strava_oauth(app_name, app_client_id, app_secret, app_scope="activity:read_all"))
+#my_acts <- get_activity_list(stoken, after = as.Date('2020-12-31'))
+
+calculate_savings <- function(daily_km, days_per_year = 250) {
+  total_annual_cost <- 462.1e6  
+  avg_km_per_vehicle <- 15200   
+  num_vehicles <- 700000
+  
+  # Total annual VKT
+  total_vkt <- avg_km_per_vehicle * num_vehicles  # in km
+  # Road cost per km
+  cost_per_km <- total_annual_cost / total_vkt  # in dollars per km
+  # Annual distance biked instead of driven
+  annual_biked_km <- daily_km * days_per_year  # in km
+  # Annual savings
+  savings <- annual_biked_km * cost_per_km  # in dollars
+  return(savings)
+}
+
+# Example usage
+daily_km <- 10
+savings <- calculate_savings(daily_km)
+print(savings)
+
+```
+
+# Results
+
+Stay tuned for results as they unfold!
+
+# Discussion
+
+Stay tuned for results as they unfold!
 :::

@@ -75,25 +75,22 @@ coe_ini_2025 <- read_csv("YEG25-InitialSites.csv") |> st_as_sf(coords = c("longi
 
 # What's all this noise about?
 
-Urban noise is increasingly recognized for its detrimental effects on both human health and biodiversity. This project initiates a long-term monitoring effort to assess the impact of urban noise on natural areas within the City of Edmonton. The goal is to develop a comprehensive framework and actionable tools to reduce noise pollution and support urban biodiversity monitoring, fostering quieter, more sustainable urban environments. This project is in collaboration with the City of Edmonton, University of Alberta and the [SENSR](sensr.ca) unit of [Biodiversity Pathways Ltd.](https://biodiversitypathways.ca/), itself a national subsidiary of the [Alberta Biodiversity Monitoring Institute](abmi.ca), which is a not-for-profit that tracks changes in wildlife and their habitats across Alberta, working collaboratively to provide ongoing, relevant, and scientifically credible information about our living resources.
+Urban noise is increasingly recognized for its detrimental effects on both human health and biodiversity. This project aims to initiate a long-term monitoring effort to assess the impact of urban noise on natural areas within the City of Edmonton. The goal is to develop a comprehensive framework and actionable tools to reduce noise pollution and support urban biodiversity monitoring, fostering quieter, more sustainable urban environments. This project is in collaboration with the City of Edmonton Arts, Heritage and Nature Experience team, the [University of Alberta](https://www.ualberta.ca) and the [SENSR](sensr.ca) unit of [Biodiversity Pathways Ltd.](https://biodiversitypathways.ca/), itself a national subsidiary of the [Alberta Biodiversity Monitoring Institute](abmi.ca), which is a not-for-profit that tracks changes in wildlife and their habitats across Alberta, working collaboratively to provide ongoing, relevant, and scientifically credible information about our living resources.
 
-<div style="display: flex; justify-content: space-around; padding: 20px;">
+<div style="display: flex; justify-content: center; align-items: center; gap: 20px; padding: 20px;">
   <a href="https://sensr.ca" target="_blank" style="text-decoration: none;">
-    <img src="https://via.placeholder.com/50?text=SENSR" alt="SENSR" style="width: 50px; height: 50px; border-radius: 50%;"/>
+    <img src="SENSRlogo.png" alt="SENSR Logo" style="max-width: 100px; max-height: 100px; object-fit: contain;" />
   </a>
   <a href="https://biodiversitypathways.ca" target="_blank" style="text-decoration: none;">
-    <img src="https://via.placeholder.com/50?text=BP" alt="Biodiversity Pathways" style="width: 50px; height: 50px; border-radius: 50%;"/>
+    <img src="BPlogo.png" alt="Biodiversity Pathways" style="max-width: 100px; max-height: 100px; object-fit: contain;" />
   </a>
-  <a href="https://abmi.ca" target="_blank" style="text-decoration: none;">
-    <img src="https://via.placeholder.com/50?text=ABMI" alt="ABMI" style="width: 50px; height: 50px; border-radius: 50%;"/>
+  <a href="https://www.ualberta.ca/" target="_blank" style="text-decoration: none;">
+    <img src="UAlberta.png" alt="UofA" style="max-width: 100px; max-height: 100px; object-fit: contain;" />
+  </a>
+  <a href="https://www.edmonton.ca/city_government/environmental_stewardship/natural-areas" target="_blank" style="text-decoration: none;">
+    <img src="coelogo.png" alt="COE" style="max-width: 100px; max-height: 100px; object-fit: contain;" />
   </a>
 </div>
-
-dunluce tree stand
-st albert trail 136 st
-rampart 
-crystallina nera
-
 
 ::: {.callout-note collapse="true" style="background-color: #f4f4f4; padding: 20px;"}
 This report is dynamically generated, meaning its results may evolve with the addition of new data or further analyses. For the most recent updates, refer to the publication date and feel free to reach out to the authors.
@@ -118,8 +115,6 @@ This study aims to assess the proportion of natural areas in Edmonton that excee
 #| message: false
 #| include: true
 #| fig-align: center
-#| fig-width: 10
-#| fig-height: 10
 #| fig-cap: Monitoring locations
 #| label: fig-monitoring-locations
 
@@ -149,9 +144,43 @@ The methodology for identifying potential and final monitoring sites was based o
 
 ## Acoustic data collection
 
-Acoustic biodiversity data were collected using a mix of Wildlife Acoustics SM4 and SM Mini 2 equipped with stereo-microphone stubs. These devices were selected for their portability, reliability, and ability to record high-fidelity audio across a broad frequency range, enabling the detection of most acoustic biodiversity. The recorders were programmed to capture throughout the day to capture the relative noisescape and during critical periods such as dawn and dusk periods. To quantify sound pressure levels, we deployed NSRT_mk4 sound level meters including a Type 1 digital MEMS microphone. The NSRT_mk4’s accurate date/time clock and non-volatile 128 Mb recording memory ensured robust data logging even in challenging environmental conditions. Noise metrics, including equivalent continuous sound level (Leq), maximum and minimum sound levels (Lmax and Lmin), and frequency-specific sound pressure levels, were recorded. To contextualize the acoustic data, environmental covariates such as temperature, humidity, and vegetation cover were also recorded.
+Acoustic biodiversity data were collected using a mix of Wildlife Acoustics SM4 and SM Mini 2 equipped with stereo-microphone stubs. These devices were selected for their portability, reliability, and ability to record high-fidelity audio across a broad frequency range, enabling the detection of most acoustic biodiversity. The recorders were programmed to capture throughout the day to capture the relative noisescape and during critical periods such as dawn and dusk periods (see @tbl-schedule). Recorders were set to record the soundscape for 3 minutes every hour on the hour. To quantify sound pressure levels, we deployed NSRT_mk4 sound level meters including a Type 1 digital MEMS microphone. The NSRT_mk4’s accurate date/time clock and non-volatile 128 Mb recording memory ensured robust data logging even in challenging environmental conditions. Noise metrics, including equivalent continuous sound level (Leq), maximum and minimum sound levels (Lmax and Lmin), and frequency-specific sound pressure levels, were recorded. To contextualize the acoustic data, environmental covariates such as temperature, humidity, and vegetation cover were also recorded. ARUs and decibel meters were placed between 1.5 and 3 meters height, the higher up in more frequented areas to avoid theft.
 
 ```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#| message: false
+#| include: false
+#| fig-align: center
+#| tbl-cap: Materials needed
+#| label: tbl-materials
+
+materials_needed <- tibble(
+  category = c(
+    "Field Equipment", "Field Equipment", "Field Equipment", "Field Equipment", "Field Equipment", 
+    "Field Equipment", "Field Equipment", "Field Equipment", "Field Equipment", "Field Equipment", 
+    "Field Equipment", "Field Equipment", "Field Equipment", "Field Equipment", "Field Equipment", 
+    "Field Equipment", "Biking Equipment", "Biking Equipment", "Biking Equipment", "Biking Equipment", 
+    "Biking Equipment", "Outdoor Gear", "Outdoor Gear", "Outdoor Gear", "Outdoor Gear", "Outdoor Gear"
+  ),
+  item = c(
+    "GPS", "Data sheets", "Compass", "ARU", "Batteries", 
+    "SD set file", "Sound meters", "Python cables", "Hose clamps for attachments", "Pencils", 
+    "Clipboards", "FLHA Hazard Assessments", "Cell phones", "ERP, FAP and SOP copies", 
+    "Quick installation guide", "Screwdriver, screws, nuts and bolts", 
+    "Bike", "Bike pumps", "Allen keys", "Goggles", "Helmets", 
+    "Gloves", "Outdoor clothing", "Glasses", "Sunscreen", "Reflective Vest"
+  )
+)
+```
+
+```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#| message: false
+#| include: true
 
 # Calculated outside R for now
 #dem <- st_read("geospatial_assets/DEM/DEM_Points_3TM.shp")
@@ -188,7 +217,6 @@ ggplot(data = veg_areas) +
     legend.title = element_text(size = 12)
   )
 
-
 ```
 
 ## Acoustic data processing
@@ -202,6 +230,12 @@ Acoustic data were transferred to the University of Alberta Data Centre in Edmon
 We used [Strava API](https://www.strava.com/settings/api) through [rstrava](https://github.com/fawda123/rStrava) to map the bike trips we took. We then estimated the city-miles traveled in a gas-powered F-150, a standard vehicle used for city operations. We also calculate the average road infrastructure cost savings performed instead of using vehicles.
 
 ```{r}
+#| echo: false
+#| eval: true
+#| warning: false
+#| message: false
+#| include: true
+
 calculate_f150_co2 <- function(distance_km) {
   # Assumptions
   fuel_efficiency_l_per_100km <- 15.7  # Ford F-150 city fuel efficiency (L/100 km)
@@ -253,4 +287,3 @@ Stay tuned for results as they unfold!
 # Discussion
 
 Stay tuned for results as they unfold!
-:::

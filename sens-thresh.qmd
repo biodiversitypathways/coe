@@ -69,7 +69,7 @@ load('coe.RData')
 wt_auth()
 
 coe_2024 <- wt_download_report(1750, 'ARU', 'main', T)
-coe_ini_2025 <- read_csv("YEG25-InitialSites.csv") |> st_as_sf(coords = c("longitude","latitude"), crs = 4326)
+coe_ini_2025 <- read_csv("assets/YEG25-InitialSites.csv") |> st_as_sf(coords = c("longitude","latitude"), crs = 4326)
 
 ```
 
@@ -82,19 +82,23 @@ Urban noise is increasingly recognized for its detrimental effects on both human
     <img src="SENSRlogo.png" alt="SENSR Logo" style="max-width: 100px; max-height: 100px; object-fit: contain;" />
   </a>
   <a href="https://biodiversitypathways.ca" target="_blank" style="text-decoration: none;">
-    <img src="BPlogo.png" alt="Biodiversity Pathways" style="max-width: 100px; max-height: 100px; object-fit: contain;" />
+    <img src="BPlogo.png" alt="Biodiversity Pathways" style="max-width: 150px; max-height: 150px; object-fit: contain;" />
   </a>
   <a href="https://www.ualberta.ca/" target="_blank" style="text-decoration: none;">
-    <img src="UAlberta.png" alt="UofA" style="max-width: 100px; max-height: 100px; object-fit: contain;" />
+    <img src="UAlberta.png" alt="UofA" style="max-width: 150px; max-height: 150px; object-fit: contain;" />
   </a>
   <a href="https://www.edmonton.ca/city_government/environmental_stewardship/natural-areas" target="_blank" style="text-decoration: none;">
-    <img src="coelogo.png" alt="COE" style="max-width: 100px; max-height: 100px; object-fit: contain;" />
+    <img src="coelogo.png" alt="COE" style="max-width: 150px; max-height: 150px; object-fit: contain;" />
   </a>
 </div>
 
 ::: {.callout-note collapse="true" style="background-color: #f4f4f4; padding: 20px;"}
 This report is dynamically generated, meaning its results may evolve with the addition of new data or further analyses. For the most recent updates, refer to the publication date and feel free to reach out to the authors.
 :::
+
+# Land Acknowledgement
+
+Edmonton, ᐊᒥᐢᑿᒌᐚᐢᑲᐦᐃᑲᐣ Amiskwaciwâskahikan, is located within Treaty 6 Territory and within the Métis homelands and Métis Nation of Alberta Region 4. We acknowledge this land as the traditional territories of many First Nations such as the Nehiyaw (Cree), Denesuliné (Dene), Nakota Sioux (Stoney), Anishinaabe (Saulteaux) and Niitsitapi (Blackfoot).
 
 # Introduction
 
@@ -115,23 +119,35 @@ This study aims to assess the proportion of natural areas in Edmonton that excee
 #| message: false
 #| include: true
 #| fig-align: center
-#| fig-cap: Monitoring locations
+#| fig-cap: Monitoring locations with a 400 m buffer
 #| label: fig-monitoring-locations
 
-coe_2024_locs_buffered <- coe_2024_locs |> 
-  sf::st_buffer(dist = 400) |> 
-  sf::st_transform(crs = 4326)
+generate_random_point <- function(centroid, radius = 400) {
+  angle <- runif(1, 0, 2 * pi)
+  distance <- sqrt(runif(1)) * radius
+  new_x <- centroid[1] + distance * cos(angle)
+  new_y <- centroid[2] + distance * sin(angle)
+  c(new_x, new_y)
+}
 
-coe_2025_locs_buffered <- coe_ini_2025 |> 
-  sf::st_buffer(dist = 400) |> 
-  sf::st_transform(crs = 4326)
+coe_2025_locs_random <- coe_ini_2025 %>%
+  sf::st_coordinates() %>%
+  as.data.frame() %>%
+  rowwise() %>%
+  mutate(random_point = list(generate_random_point(c(X, Y), 500))) %>%
+  ungroup() %>%
+  mutate(random_point = map(random_point, ~sf::st_point(.x))) %>%
+  sf::st_as_sf(coords = c("X", "Y"), crs = sf::st_crs(coe_ini_2025))
+
+coe_2025_random_buffered <- coe_2025_locs_random %>%
+  sf::st_buffer(dist = 500)
 
 leaflet() %>%
-  addTiles() %>%  # Add default OpenStreetMap map tiles
+  addTiles() %>%
   addPolygons(
-    data = coe_2025_locs_buffered,
-    popup = ~paste("Location:", coe_2025_locs_buffered$location),
-    color = "blue", # Buffer color
+    data = coe_2025_random_buffered,
+    popup = ~paste("Random Location:", coe_2025_random_buffered$location),
+    color = "green",
     fillOpacity = 0.3
   ) %>%
   addMeasure(primaryLengthUnit = "meters", primaryAreaUnit = "sqmeters") %>%
@@ -144,7 +160,7 @@ The methodology for identifying potential and final monitoring sites was based o
 
 ## Acoustic data collection
 
-Acoustic biodiversity data were collected using a mix of Wildlife Acoustics SM4 and SM Mini 2 equipped with stereo-microphone stubs. These devices were selected for their portability, reliability, and ability to record high-fidelity audio across a broad frequency range, enabling the detection of most acoustic biodiversity. The recorders were programmed to capture throughout the day to capture the relative noisescape and during critical periods such as dawn and dusk periods (see @tbl-schedule). Recorders were set to record the soundscape for 3 minutes every hour on the hour. To quantify sound pressure levels, we deployed NSRT_mk4 sound level meters including a Type 1 digital MEMS microphone. The NSRT_mk4’s accurate date/time clock and non-volatile 128 Mb recording memory ensured robust data logging even in challenging environmental conditions. Noise metrics, including equivalent continuous sound level (Leq), maximum and minimum sound levels (Lmax and Lmin), and frequency-specific sound pressure levels, were recorded. To contextualize the acoustic data, environmental covariates such as temperature, humidity, and vegetation cover were also recorded. ARUs and decibel meters were placed between 1.5 and 3 meters height, the higher up in more frequented areas to avoid theft.
+Acoustic biodiversity data were collected using a mix of Wildlife Acoustics SM4 and SM Mini 2 equipped with stereo-microphone stubs. These devices were selected for their portability, reliability, and ability to record high-fidelity audio across a broad frequency range, enabling the detection of most acoustic biodiversity. The recorders were programmed to capture throughout the day to capture the relative noisescape and during critical periods such as dawn and dusk periods. Recorders were set to record the soundscape for 3 minutes every hour on the hour between 0:00 and 3:00 and 10:00 - 18:00, and every 5 minutes on the hour between 4:00 - 9:00 AM and 19:00 - 23:00. To quantify sound pressure levels, we deployed Convergence Instruments NSRT_mk4 sound level meters including a Type 1 digital MEMS microphone. The NSRT_mk4’s accurate date/time clock and non-volatile 128 Mb recording memory ensured robust data logging even in challenging environmental conditions. Noise metrics, including equivalent continuous sound level (Leq), maximum and minimum sound levels (Lmax and Lmin), and frequency-specific sound pressure levels, were recorded. To contextualize the acoustic data, environmental covariates such as temperature, humidity, and vegetation cover were also recorded. ARUs and decibel meters were placed between 1.5 and 3 meters height, the higher up in more frequented areas to avoid theft. The direction and orientation of the ARUs and decibel meters were recorded. 
 
 ```{r}
 #| echo: false
@@ -173,6 +189,8 @@ materials_needed <- tibble(
     "Gloves", "Outdoor clothing", "Glasses", "Sunscreen", "Reflective Vest"
   )
 )
+
+kable(materials_needed)
 ```
 
 ```{r}
@@ -180,7 +198,7 @@ materials_needed <- tibble(
 #| eval: true
 #| warning: false
 #| message: false
-#| include: true
+#| include: false
 
 # Calculated outside R for now
 #dem <- st_read("geospatial_assets/DEM/DEM_Points_3TM.shp")
@@ -221,20 +239,20 @@ ggplot(data = veg_areas) +
 
 ## Acoustic data processing
 
-Acoustic data were transferred to the University of Alberta Data Centre in Edmonton for redundant data storage under [WildTrax](https://wildtrax.ca). The recordings were standardized to ensure adherence to the naming convention of `LOCATION_DATETIME`, such as `YEG25-1_20250625_053500.wav`. All recordings designated for processing were directly uploaded to WildTrax and can be downloaded from the platform's Recording tab, accessible under Manage \> Download list of recordings (see @fig-download-recs). Data processing also took place in WildTrax, using the 1SPT method (species-individual per task or time to first detection) with the goal to describe the acoustic community of species heard. The full acoustic community was analyzed including birds, mammals, amphibians, including a relative environment noise assessment (i.e. wind, rain and anthropogenic noise) To ensure balanced replication, four randomly selected recordings were processed for 3-minutes during the morning hours of 5:00 AM - 7:59 AM and dusk hours between 20:00 - 22:59 ideally on four separate dates, during optimal weather conditions. All recordings were simulatenously run through both BirdNET and HawkEars multi-species classifiers to determine false negative and positive rates at the location level for all the media collected, as well as to determine classifier performance.
-
-## Mapping noise thresholds
+Acoustic data were transferred to the University of Alberta Data Centre in Edmonton for redundant data storage under [WildTrax](https://wildtrax.ca). The recordings were standardized to ensure adherence to the naming convention of `LOCATION_DATETIME`, such as `YEG25-1_20250625_053500.wav`. All recordings designated for processing were directly uploaded to WildTrax and can be downloaded from the platform's Recording tab, accessible under Manage \> Download list of recordings (see @fig-download-recs). Data processing also took place in WildTrax, using the 1SPT method (species-individual per task or time to first detection) with the goal to describe the acoustic community of species heard. The full acoustic community was analyzed including birds, mammals, amphibians, including a relative environment noise assessment (i.e. wind, rain and anthropogenic noise) To ensure balanced replication, four randomly selected recordings were processed for 3-minutes during the morning hours of 5:00 AM - 7:59 AM and dusk hours between 20:00 - 22:59 ideally on four separate dates, during optimal weather conditions. All recordings were simulatenously run through both [BirdNET](https://birdnet.cornell.edu/) and [HawkEars](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5007182) multi-species classifiers to determine false negative and positive rates at the location level for all the media collected, as well as to determine classifier performance.
 
 ## Zero-emissions fieldwork
 
-We used [Strava API](https://www.strava.com/settings/api) through [rstrava](https://github.com/fawda123/rStrava) to map the bike trips we took. We then estimated the city-miles traveled in a gas-powered F-150, a standard vehicle used for city operations. We also calculate the average road infrastructure cost savings performed instead of using vehicles.
+We used [Strava API](https://www.strava.com/settings/api) through [rstrava](https://github.com/fawda123/rStrava) to map the bike trips we took to get to the study locations. We then estimated the city-miles traveled in a gas-powered F-150, a standard vehicle used for city operations. We also calculate the average road infrastructure cost savings performed instead of using vehicles.
+
+Stay tuned for results as they unfold!
 
 ```{r}
 #| echo: false
-#| eval: true
+#| eval: false
 #| warning: false
 #| message: false
-#| include: true
+#| include: false
 
 calculate_f150_co2 <- function(distance_km) {
   # Assumptions
@@ -281,9 +299,5 @@ print(savings)
 ```
 
 # Results
-
-Stay tuned for results as they unfold!
-
-# Discussion
 
 Stay tuned for results as they unfold!

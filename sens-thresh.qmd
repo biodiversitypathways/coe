@@ -119,7 +119,7 @@ This study aims to assess the proportion of natural areas in Edmonton that excee
 #| message: false
 #| include: true
 #| fig-align: center
-#| fig-cap: Monitoring locations with a 400 m buffer
+#| fig-cap: Monitoring locations within a 400 m buffer
 #| label: fig-monitoring-locations
 
 generate_random_point <- function(centroid, radius = 400) {
@@ -144,9 +144,10 @@ coe_2025_random_buffered <- coe_2025_locs_random %>%
 
 leaflet() %>%
   addTiles() %>%
+  #addMarkers(data = coe_ini_2025, popup = coe_ini_2025$location) %>%
   addPolygons(
     data = coe_2025_random_buffered,
-    popup = ~paste("Random Location:", coe_2025_random_buffered$location),
+    popup = ~coe_2025_random_buffered$location,
     color = "green",
     fillOpacity = 0.3
   ) %>%
@@ -160,7 +161,7 @@ The methodology for identifying potential and final monitoring sites was based o
 
 ## Acoustic data collection
 
-Acoustic biodiversity data were collected using a mix of Wildlife Acoustics SM4 and SM Mini 2 equipped with stereo-microphone stubs. These devices were selected for their portability, reliability, and ability to record high-fidelity audio across a broad frequency range, enabling the detection of most acoustic biodiversity. The recorders were programmed to capture throughout the day to capture the relative noisescape and during critical periods such as dawn and dusk periods. Recorders were set to record the soundscape for 3 minutes every hour on the hour between 0:00 and 3:00 and 10:00 - 18:00, and every 5 minutes on the hour between 4:00 - 9:00 AM and 19:00 - 23:00. To quantify sound pressure levels, we deployed Convergence Instruments NSRT_mk4 sound level meters including a Type 1 digital MEMS microphone. The NSRT_mk4’s accurate date/time clock and non-volatile 128 Mb recording memory ensured robust data logging even in challenging environmental conditions. Noise metrics, including equivalent continuous sound level (Leq), maximum and minimum sound levels (Lmax and Lmin), and frequency-specific sound pressure levels, were recorded. To contextualize the acoustic data, environmental covariates such as temperature, humidity, and vegetation cover were also recorded. ARUs and decibel meters were placed between 1.5 and 3 meters height, the higher up in more frequented areas to avoid theft. The direction and orientation of the ARUs and decibel meters were recorded. 
+Acoustic biodiversity data were collected using a mix of Wildlife Acoustics SM4 and SM Mini 2 equipped with stereo-microphone stubs. These devices were selected for their portability, reliability, and ability to record high-fidelity audio across a broad frequency range, enabling the detection of most acoustic biodiversity. The recorders were programmed to capture throughout the day to capture the relative noisescape and during critical periods such as dawn and dusk periods. Recorders were set to record the soundscape for 3 minutes every hour on the hour between 0:00 and 3:00 and 10:00 - 18:00, and every 5 minutes on the hour between 4:00 - 9:00 AM and 19:00 - 23:00. To quantify sound pressure levels, we deployed Convergence Instruments NSRT_mk4 sound level meters including a Type 1 digital MEMS microphone. Noise metrics, including equivalent continuous sound level (*Leq*), maximum and minimum sound levels (*Lmax* and *Lmin*), and frequency-specific sound pressure levels, were recorded. To contextualize the acoustic data, environmental covariates such as temperature, humidity, and vegetation cover were also recorded. ARUs and decibel meters were placed between 1.5 and 3 meters height, the higher up in more frequented areas to avoid theft. The direction and orientation of the ARUs and decibel meters were recorded. 
 
 ```{r}
 #| echo: false
@@ -239,7 +240,7 @@ ggplot(data = veg_areas) +
 
 ## Acoustic data processing
 
-Acoustic data were transferred to the University of Alberta Data Centre in Edmonton for redundant data storage under [WildTrax](https://wildtrax.ca). The recordings were standardized to ensure adherence to the naming convention of `LOCATION_DATETIME`, such as `YEG25-1_20250625_053500.wav`. All recordings designated for processing were directly uploaded to WildTrax and can be downloaded from the platform's Recording tab, accessible under Manage \> Download list of recordings (see @fig-download-recs). Data processing also took place in WildTrax, using the 1SPT method (species-individual per task or time to first detection) with the goal to describe the acoustic community of species heard. The full acoustic community was analyzed including birds, mammals, amphibians, including a relative environment noise assessment (i.e. wind, rain and anthropogenic noise) To ensure balanced replication, four randomly selected recordings were processed for 3-minutes during the morning hours of 5:00 AM - 7:59 AM and dusk hours between 20:00 - 22:59 ideally on four separate dates, during optimal weather conditions. All recordings were simulatenously run through both [BirdNET](https://birdnet.cornell.edu/) and [HawkEars](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5007182) multi-species classifiers to determine false negative and positive rates at the location level for all the media collected, as well as to determine classifier performance.
+Acoustic data were transferred to the University of Alberta Data Centre in Edmonton for redundant data storage under [WildTrax](https://wildtrax.ca), which is a national platform for the management, storage, processing, sharing and discovery of environmental sensor data. The recordings were standardized to ensure adherence to the naming convention of `LOCATION_DATETIME`, such as `EDAL-A03-CRY1_20250625_053500.wav`. All recordings designated for processing were directly uploaded to WildTrax and can be downloaded from the platform's Recording tab, accessible under Manage \> Download list of recordings (see @fig-download-recs). Data processing also took place in WildTrax, using the 1SPT method (species-individual per task or time to first detection) with the goal to describe the acoustic community of species heard. The full acoustic community was analyzed including birds, mammals, amphibians, including a relative environment noise assessment (i.e. wind, rain and anthropogenic noise) To ensure balanced replication, four randomly selected recordings were processed for 3-minutes during the morning hours of 5:00 AM - 7:59 AM and dusk hours between 20:00 - 22:59 ideally on four separate dates, during optimal weather conditions. All recordings were simulatenously run through both [BirdNET](https://birdnet.cornell.edu/) and [HawkEars](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5007182) multi-species classifiers to determine false negative and positive rates at the location level for all the media collected, as well as to determine classifier performance.
 
 ## Zero-emissions fieldwork
 

@@ -52,6 +52,7 @@ library(scales)
 library(kableExtra)
 library(plotly)
 library(DT)
+library(fs)
 
 load('coe.RData')
 #save.image('coe.RData')
@@ -161,7 +162,7 @@ The methodology for identifying potential and final monitoring sites was based o
 
 ## Acoustic data collection
 
-Acoustic biodiversity data were collected using a mix of Wildlife Acoustics SM4 and SM Mini 2 equipped with stereo-microphone stubs. These devices were selected for their portability, reliability, and ability to record high-fidelity audio across a broad frequency range, enabling the detection of most acoustic biodiversity. The recorders were programmed to capture throughout the day to capture the relative noisescape and during critical periods such as dawn and dusk periods. Recorders were set to record the soundscape for 3 minutes every hour on the hour between 0:00 and 3:00 and 10:00 - 18:00, and every 5 minutes on the hour between 4:00 - 9:00 AM and 19:00 - 23:00. To quantify sound pressure levels, we deployed Convergence Instruments NSRT_mk4 sound level meters including a Type 1 digital MEMS microphone. Noise metrics, including equivalent continuous sound level (*Leq*), maximum and minimum sound levels (*Lmax* and *Lmin*), and frequency-specific sound pressure levels, were recorded. To contextualize the acoustic data, environmental covariates such as temperature, humidity, and vegetation cover were also recorded. ARUs and decibel meters were placed between 1.5 and 3 meters height, the higher up in more frequented areas to avoid theft. The direction and orientation of the ARUs and decibel meters were recorded. 
+Acoustic biodiversity data were collected using a mix of Wildlife Acoustics SM4 and SM Mini 2 equipped with stereo-microphone stubs. These devices were selected for their portability, reliability, and ability to record high-fidelity audio across a broad frequency range, enabling the detection of most acoustic biodiversity. The recorders were programmed to capture throughout the day to capture the relative noisescape and during critical periods such as dawn and dusk periods. Recorders were set to record the soundscape for 3 minutes every hour on the hour between 0:00 and 3:00 and 10:00 - 18:00, and every 5 minutes on the hour between 4:00 - 9:00 AM and 19:00 - 23:00. To quantify sound pressure levels, we deployed Convergence Instruments NSRT_mk4 sound level meters which includes a Type 1 digital MEMS microphone. Noise metrics collected included equivalent continuous sound level (*Leq*), maximum and minimum sound levels (*Lmax* and *Lmin*) collected once every minute. Environmental covariates such as temperature, humidity, and vegetation cover were also recorded. ARUs and decibel meters were placed between 1.5 and 3 meters heightand the direction and orientation of the ARUs and decibel meters were recorded. 
 
 ```{r}
 #| echo: false
@@ -238,9 +239,171 @@ ggplot(data = veg_areas) +
 
 ```
 
+### Sound pressure level equipment and data management
+
+The NSRT_mk4 comes with basic functionalities to record sound pressure levels. Instrument Manager is the devices programmation utility that runs exclusively on Windows. The
+
+When a decibel meter is deployed, securely attach it to something in order to minimize the risk of theft as much as possible. This includes using Python cables, deploying the unit was an unreachable height, or choosing a new deployment location. The decibel meters battery life usually lasts around 1 week after which it will need to be replaced
+
+```{r}
+#| include: false
+#| echo: false
+#| eval: false
+#| warning: false
+#| message: false
+
+dec <- dir_ls("./spl", regexp = ".xls") |>
+  map_dfr(
+    ~read_csv(.x, skip = 2) |>
+      mutate(
+        filename = basename(.x),                     
+        location = str_extract(filename, "^[^_]+")  
+      )
+  ) |>
+  separate(
+    `Time (Date hh:mm:ss.ms)\t L-Max dB -A \t LEQ dB -A \t L-Min dB -A \t L-PeakdB -A`,
+    into = c("Time", "L_Max_dB_A", "LEQ_dB_A", "L_Min_dB_A", "L_PeakdB_A"),
+    sep = "\t"
+  ) |>
+  mutate(Time = ymd_hms(Time),
+         across(c(L_Max_dB_A, LEQ_dB_A, L_Min_dB_A, L_PeakdB_A), as.numeric))
+
+dec_filtered <- dec |>
+  group_by(location) |>
+  mutate(
+    Time_minute = floor_date(Time, "minute"),
+    is_weekend = wday(Time, label = TRUE) %in% c("Sat", "Sun")  # Add weekend indicator
+  ) |> 
+  ungroup() |>
+  group_by(location, Time_minute) |>
+  filter(row_number() == 1) |>
+  ungroup() |>
+  inner_join(wlj |> select(location, latitude, longitude), by = "location")
+
+wl <- wt_get_locations("COE")
+
+wlj <- wl |>
+  mutate(location = str_replace_all(location,"-","")) |>
+  unnest()
+```
+
+```{r}
+#| eval: true
+# Plot with weekend coloring
+ggplot(dec_filtered, aes(x = Time, y = LEQ_dB_A, colour = is_weekend)) +
+  geom_point() +
+  scale_colour_viridis_d(option = "magma") +
+  facet_wrap(~location) +
+  theme_bw() +
+  labs(
+    title = "LEQ dB-A Over Time by Location",
+    x = "Time",
+    y = "LEQ dB-A"
+  )
+
+```
+
+```{r}
+#| eval: true
+
+dec_filtered <- dec_filtered |>
+  mutate(hour = hour(Time))  # Add an 'hour' column to easily filter time periods
+
+# Subset data for 6 AM - 9 AM
+morning_data <- dec_filtered |>
+  filter(hour >= 6 & hour < 9)
+
+# Subset data for the rest of the day (you can choose different time windows)
+other_data <- dec_filtered |>
+  filter(hour < 6 | hour >= 9)
+
+# Compare average LEQ_dB_A between 6 AM - 9 AM and other times
+morning_avg <- mean(morning_data$LEQ_dB_A, na.rm = TRUE)
+other_avg <- mean(other_data$LEQ_dB_A, na.rm = TRUE)
+
+# Print averages
+cat("Average LEQ during 6AM - 9AM: ", morning_avg, "\n")
+cat("Average LEQ during other times of the day: ", other_avg, "\n")
+
+# Perform t-test to check if there's a significant difference
+t_test_result <- t.test(morning_data$LEQ_dB_A, other_data$LEQ_dB_A, na.rm = TRUE)
+
+# Print the result of the t-test
+print(t_test_result)
+
+ggplot(
+  dec_filtered |> 
+    mutate(location = case_when(grepl("RVK", location) ~ "Kinnaird Ravine", 
+                                grepl("ZOO2", location) ~ "Edmonton Valley Zoo", 
+                                TRUE ~ location),
+           hour = hour(Time)),
+  aes(x = hour, y = LEQ_dB_A, group = hour, fill = is_weekend)) +
+  geom_boxplot() +
+  scale_fill_viridis_d(option = "magma", name = "Weekends") +
+  theme_bw() +
+  facet_grid(is_weekend ~ location) +
+  labs(title = "LEQ dB-A Over Time by Location", x = "Hour of the Day", y = "LEQ dB-A")
+
+```
+
+```{r}
+#| eval: false 
+
+dec_sf <- dec_filtered |>
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+
+grid <- st_make_grid(
+  st_bbox(dec_sf),
+  cellsize = 1000, # Adjust grid resolution as needed
+  what = "centers"
+) |> 
+  st_as_sf()
+
+grid_df <- grid |> st_coordinates() |> as_tibble()
+
+kriging_model <- gstat::gstat(
+  formula = LEQ_dB_A ~ 1, 
+  data = dec_sf
+)
+kriging_result <- predict(kriging_model, newdata = grid)
+
+grid$LEQ_dB_A <- kriging_result$var1.pred
+
+# Plot Heatmap
+ggplot() +
+  geom_sf(data = grid, aes(fill = LEQ_dB_A), color = NA) +
+  scale_fill_viridis_c(name = "LEQ dB-A") +
+  labs(
+    title = "Noise Map (Kriging Interpolation)",
+    x = "Longitude",
+    y = "Latitude"
+  ) +
+  theme_minimal(base_size = 12)
+
+
+idw_model <- gstat::gstat(formula = LEQ_dB_A ~ 1, data = dec_sf)
+idw_result <- predict(idw_model, newdata = grid)
+
+# Merge IDW Results with Grid
+grid$LEQ_dB_A <- idw_result$var1.pred
+
+# Plot Heatmap
+ggplot() +
+  geom_sf(data = grid, aes(fill = LEQ_dB_A), color = NA) +
+  scale_fill_viridis_c(name = "LEQ dB-A") +
+  labs(
+    title = "Noise Map (IDW Interpolation)",
+    x = "Longitude",
+    y = "Latitude"
+  ) +
+  theme_minimal(base_size = 12)
+
+```
+
+
 ## Acoustic data processing
 
-Acoustic data were transferred to the University of Alberta Data Centre in Edmonton for redundant data storage under [WildTrax](https://wildtrax.ca), which is a national platform for the management, storage, processing, sharing and discovery of environmental sensor data. The recordings were standardized to ensure adherence to the naming convention of `LOCATION_DATETIME`, such as `EDAL-A03-CRY1_20250625_053500.wav`. All recordings designated for processing were directly uploaded to WildTrax and can be downloaded from the platform's Recording tab, accessible under Manage \> Download list of recordings (see @fig-download-recs). Data processing also took place in WildTrax, using the 1SPT method (species-individual per task or time to first detection) with the goal to describe the acoustic community of species heard. The full acoustic community was analyzed including birds, mammals, amphibians, including a relative environment noise assessment (i.e. wind, rain and anthropogenic noise) To ensure balanced replication, four randomly selected recordings were processed for 3-minutes during the morning hours of 5:00 AM - 7:59 AM and dusk hours between 20:00 - 22:59 ideally on four separate dates, during optimal weather conditions. All recordings were simulatenously run through both [BirdNET](https://birdnet.cornell.edu/) and [HawkEars](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5007182) multi-species classifiers to determine false negative and positive rates at the location level for all the media collected, as well as to determine classifier performance.
+Acoustic data were transferred to the University of Alberta Data Centre in Edmonton for redundant data storage under [WildTrax](https://wildtrax.ca), which is a national platform for the management, storage, processing, sharing and discovery of environmental sensor data. The recordings were standardized to ensure adherence to the naming convention of `LOCATION_DATETIME`, such as `EDAL-A03-CRY1_20250625_053500.wav`. All recordings designated for processing were directly uploaded to WildTrax and can be downloaded from the platform's Recording tab, accessible under Manage \> Download list of recordings (see @fig-download-recs). Data processing also took place in WildTrax, using the 1SPT method (species-individual per task or time to first detection) with the goal to describe the acoustic community of species heard. The full acoustic community was analyzed including birds, mammals, amphibians, including a relative environment noise assessment (i.e. wind, rain and anthropogenic noise) To ensure balanced replication, four randomly selected recordings were processed for 3-minutes during the morning hours of 5:00 AM - 7:59 AM and dusk hours between 20:00 - 22:59 ideally on four separate dates, during optimal weather conditions. All recordings were simulatenously run through both [BirdNET](https://birdnet.cornell.edu/) and [HawkEars](https://github.com/jhuus/HawkEars) multi-species classifiers to determine false negative and positive rates at the location level for all the media collected, as well as to determine classifier performance.
 
 ## Zero-emissions fieldwork
 

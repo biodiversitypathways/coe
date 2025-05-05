@@ -78,20 +78,9 @@ coe_ini_2025 <- read_csv("assets/YEG25-InitialSites.csv") |> st_as_sf(coords = c
 
 Urban noise is increasingly recognized for its detrimental effects on both human health and biodiversity. This project aims to initiate a long-term monitoring effort to assess the impact of urban noise on natural areas within the City of Edmonton. The goal is to develop a comprehensive framework and actionable tools to reduce noise pollution and support urban biodiversity monitoring, fostering quieter, more sustainable urban environments. This project is in collaboration with the City of Edmonton Arts, Heritage and Nature Experience team, the [University of Alberta](https://www.ualberta.ca) and the [SENSR](sensr.ca) unit of [Biodiversity Pathways Ltd.](https://biodiversitypathways.ca/), itself a national subsidiary of the [Alberta Biodiversity Monitoring Institute](abmi.ca), which is a not-for-profit that tracks changes in wildlife and their habitats across Alberta, working collaboratively to provide ongoing, relevant, and scientifically credible information about our living resources.
 
-<div style="display: flex; justify-content: center; align-items: center; gap: 20px; padding: 20px;">
-  <a href="https://sensr.ca" target="_blank" style="text-decoration: none;">
-    <img src="SENSRlogo.png" alt="SENSR Logo" style="max-width: 100px; max-height: 100px; object-fit: contain;" />
-  </a>
-  <a href="https://biodiversitypathways.ca" target="_blank" style="text-decoration: none;">
-    <img src="BPlogo.png" alt="Biodiversity Pathways" style="max-width: 150px; max-height: 150px; object-fit: contain;" />
-  </a>
-  <a href="https://www.ualberta.ca/" target="_blank" style="text-decoration: none;">
-    <img src="UAlberta.png" alt="UofA" style="max-width: 150px; max-height: 150px; object-fit: contain;" />
-  </a>
-  <a href="https://www.edmonton.ca/city_government/environmental_stewardship/natural-areas" target="_blank" style="text-decoration: none;">
-    <img src="coelogo.png" alt="COE" style="max-width: 150px; max-height: 150px; object-fit: contain;" />
-  </a>
-</div>
+::: {style="display: flex; justify-content: center; align-items: center; gap: 20px; padding: 20px;"}
+<a href="https://sensr.ca" target="_blank" style="text-decoration: none;"> <img src="SENSRlogo.png" alt="SENSR Logo" style="max-width: 100px; max-height: 100px; object-fit: contain;"/> </a> <a href="https://biodiversitypathways.ca" target="_blank" style="text-decoration: none;"> <img src="BPlogo.png" alt="Biodiversity Pathways" style="max-width: 150px; max-height: 150px; object-fit: contain;"/> </a> <a href="https://www.ualberta.ca/" target="_blank" style="text-decoration: none;"> <img src="UAlberta.png" alt="UofA" style="max-width: 150px; max-height: 150px; object-fit: contain;"/> </a> <a href="https://www.edmonton.ca/city_government/environmental_stewardship/natural-areas" target="_blank" style="text-decoration: none;"> <img src="coelogo.png" alt="COE" style="max-width: 150px; max-height: 150px; object-fit: contain;"/> </a>
+:::
 
 ::: {.callout-note collapse="true" style="background-color: #f4f4f4; padding: 20px;"}
 This report is dynamically generated, meaning its results may evolve with the addition of new data or further analyses. For the most recent updates, refer to the publication date and feel free to reach out to the authors.
@@ -162,7 +151,7 @@ The methodology for identifying potential and final monitoring sites was based o
 
 ## Acoustic data collection
 
-Acoustic biodiversity data were collected using a mix of Wildlife Acoustics SM4 and SM Mini 2 equipped with stereo-microphone stubs. These devices were selected for their portability, reliability, and ability to record high-fidelity audio across a broad frequency range, enabling the detection of most acoustic biodiversity. The recorders were programmed to capture throughout the day to capture the relative noisescape and during critical periods such as dawn and dusk periods. Recorders were set to record the soundscape for 3 minutes every hour on the hour between 0:00 and 3:00 and 10:00 - 18:00, and every 5 minutes on the hour between 4:00 - 9:00 AM and 19:00 - 23:00. To quantify sound pressure levels, we deployed Convergence Instruments NSRT_mk4 sound level meters which includes a Type 1 digital MEMS microphone. Noise metrics collected included equivalent continuous sound level (*Leq*), maximum and minimum sound levels (*Lmax* and *Lmin*) collected once every minute. Environmental covariates such as temperature, humidity, and vegetation cover were also recorded. ARUs and decibel meters were placed between 1.5 and 3 meters heightand the direction and orientation of the ARUs and decibel meters were recorded. 
+Acoustic biodiversity data were collected using a mix of Wildlife Acoustics SM4 and SM Mini 2 equipped with stereo-microphone stubs. These devices were selected for their portability, reliability, and ability to record high-fidelity audio across a broad frequency range, enabling the detection of most acoustic biodiversity. The recorders were programmed to capture throughout the day to capture the relative noisescape and during critical periods such as dawn and dusk periods. Recorders were set to record the soundscape for 3 minutes every hour on the hour between 0:00 and 3:00 and 10:00 - 18:00, and every 5 minutes on the hour between 4:00 - 9:00 AM and 19:00 - 23:00. To quantify sound pressure levels, we deployed Convergence Instruments NSRT_mk4 sound level meters which includes a Type 1 digital MEMS microphone. Noise metrics collected included equivalent continuous sound level (*Leq*), maximum and minimum sound levels (*Lmax* and *Lmin*) collected once every minute. Environmental covariates such as temperature, humidity, and vegetation cover were also recorded. ARUs and decibel meters were placed between 1.5 and 3 meters heightand the direction and orientation of the ARUs and decibel meters were recorded.
 
 ```{r}
 #| echo: false
@@ -293,7 +282,7 @@ wlj <- wl |>
 ggplot(dec_filtered, aes(x = Time, y = LEQ_dB_A, colour = is_weekend)) +
   geom_point() +
   scale_colour_viridis_d(option = "magma") +
-  facet_wrap(~location) +
+  facet_wrap(~location, ncol = 4) +
   theme_bw() +
   labs(
     title = "LEQ dB-A Over Time by Location",
@@ -331,10 +320,15 @@ t_test_result <- t.test(morning_data$LEQ_dB_A, other_data$LEQ_dB_A, na.rm = TRUE
 # Print the result of the t-test
 print(t_test_result)
 
+dec_filtered <- dec_filtered |>
+  mutate(julian = yday(Time))
+
 ggplot(
   dec_filtered |> 
     mutate(location = case_when(grepl("RVK", location) ~ "Kinnaird Ravine", 
                                 grepl("ZOO2", location) ~ "Edmonton Valley Zoo", 
+                                grepl("CRY", location) ~ "Crystallina Nera",
+                                grepl("DUN", location) ~ "Dunluce",
                                 TRUE ~ location),
            hour = hour(Time)),
   aes(x = hour, y = LEQ_dB_A, group = hour, fill = is_weekend)) +
@@ -342,12 +336,28 @@ ggplot(
   scale_fill_viridis_d(option = "magma", name = "Weekends") +
   theme_bw() +
   facet_grid(is_weekend ~ location) +
-  labs(title = "LEQ dB-A Over Time by Location", x = "Hour of the Day", y = "LEQ dB-A")
+  labs(title = "Average Sound Pressure Level Over Time by Location", x = "Hour of the Day", y = "LEQ dB-A")
+
+
+ggplot(dec_filtered |> 
+    mutate(location = case_when(grepl("RVK", location) ~ "Kinnaird Ravine", 
+                                grepl("ZOO2", location) ~ "Edmonton Valley Zoo", 
+                                grepl("CRY", location) ~ "Crystallina Nera",
+                                grepl("DUN", location) ~ "Dunluce",
+                                TRUE ~ location),
+           hour = hour(Time)),
+  aes(x = julian, y = LEQ_dB_A, group = julian, fill = is_weekend)) +
+  geom_boxplot() +
+  scale_fill_viridis_d(option = "magma", name = "Weekends") +
+  theme_bw() +
+  labs(title = "LEQ dB-A Over Time by Location", x = "Hour of the Day", y = "LEQ dB-A") +
+  facet_wrap(~location)
 
 ```
 
 ```{r}
 #| eval: false 
+#| include: false
 
 dec_sf <- dec_filtered |>
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
@@ -400,6 +410,41 @@ ggplot() +
 
 ```
 
+```{r}
+#| eval: false 
+#| include: false
+
+
+# ─── Prepare your sample‐point data for ggplot ─────────────────────────────────
+# pts_df is a SpatialPointsDataFrame; extract coords + avg_LEQ into a data.frame:
+pts_plot <- data.frame(coordinates(pts_df))
+names(pts_plot) <- c("longitude", "latitude")
+pts_plot$avg_LEQ <- pts_df$avg_LEQ
+
+# ─── Plot the filled IDW heatmap + sample points ───────────────────────────────
+ggplot() +
+  # tiled heatmap
+  geom_tile(data = idw_df,
+            aes(x = x, y = y, fill = pred_LEQ)) +
+  # overlay your measurement locations
+  geom_point(data = pts_plot,
+             aes(x = longitude, y = latitude),
+             color = "black", size = 2) +
+  scale_fill_viridis_c(name = "Pred LEQ (dB)", na.value = NA) +
+  coord_equal() +
+  labs(
+    title = "Geographic Noise Heatmap (IDW)",
+    x     = "Longitude",
+    y     = "Latitude"
+  ) +
+  theme_minimal() +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+
+```
 
 ## Acoustic data processing
 

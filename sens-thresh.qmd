@@ -241,7 +241,7 @@ When a decibel meter is deployed, securely attach it to something in order to mi
 #| warning: false
 #| message: false
 
-dec <- dir_ls("./spl", regexp = ".xls") |>
+dec <- dir_ls("./spl/date", regexp = ".xls") |>
   map_dfr(
     ~read_csv(.x, skip = 2) |>
       mutate(
@@ -257,7 +257,37 @@ dec <- dir_ls("./spl", regexp = ".xls") |>
   mutate(Time = ymd_hms(Time),
          across(c(L_Max_dB_A, LEQ_dB_A, L_Min_dB_A, L_PeakdB_A), as.numeric))
 
-dec_filtered <- dec |>
+dec2 <- dir_ls("./spl/time", regexp = ".xls") |>
+  map_dfr(
+    ~read_csv(.x, skip = 2) |>
+      mutate(
+        filename = basename(.x),                     
+        location = str_extract(filename, "^[^_]+")  
+      )
+  ) |>
+  separate(
+    `Time (s)\t L-Max dB -A \t LEQ dB -A \t L-Min dB -A \t L-PeakdB -A`,
+    into = c("Time", "L_Max_dB_A", "LEQ_dB_A", "L_Min_dB_A", "L_PeakdB_A"),
+    sep = "\t"
+  ) |>
+  mutate(start_time = str_extract(filename, "\\d{4}_\\d{2}_\\d{2}__\\d{2}h\\d{2}m\\d{2}s") |>
+                     str_replace_all("h|m|s", ":") |>
+                     ymd_hms(),
+         across(c(Time, L_Max_dB_A, LEQ_dB_A, L_Min_dB_A, L_PeakdB_A), as.numeric),
+         start_time = start_time + seconds(Time)) |>
+  select(-Time) |>
+  relocate(start_time) |>
+  rename(Time = start_time)
+
+dec_f <- bind_rows(dec, dec2)
+
+wl <- wt_get_locations("COE")
+
+wlj <- wl |>
+  mutate(location = str_replace_all(location,"-","")) |>
+  unnest()
+
+dec_filtered <- dec_f |>
   group_by(location) |>
   mutate(
     Time_minute = floor_date(Time, "minute"),
@@ -268,12 +298,8 @@ dec_filtered <- dec |>
   filter(row_number() == 1) |>
   ungroup() |>
   inner_join(wlj |> select(location, latitude, longitude), by = "location")
+  
 
-wl <- wt_get_locations("COE")
-
-wlj <- wl |>
-  mutate(location = str_replace_all(location,"-","")) |>
-  unnest()
 ```
 
 ```{r}
@@ -329,6 +355,7 @@ ggplot(
                                 grepl("ZOO2", location) ~ "Edmonton Valley Zoo", 
                                 grepl("CRY", location) ~ "Crystallina Nera",
                                 grepl("DUN", location) ~ "Dunluce",
+                                grepl("ROR",location) ~ "Roper Road",
                                 TRUE ~ location),
            hour = hour(Time)),
   aes(x = hour, y = LEQ_dB_A, group = hour, fill = is_weekend)) +
@@ -344,6 +371,7 @@ ggplot(dec_filtered |>
                                 grepl("ZOO2", location) ~ "Edmonton Valley Zoo", 
                                 grepl("CRY", location) ~ "Crystallina Nera",
                                 grepl("DUN", location) ~ "Dunluce",
+                                grepl("ROR",location) ~ "Roper Road",
                                 TRUE ~ location),
            hour = hour(Time)),
   aes(x = julian, y = LEQ_dB_A, group = julian, fill = is_weekend)) +

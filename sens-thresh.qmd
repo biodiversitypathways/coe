@@ -76,8 +76,6 @@ coe_ini_2025 <- read_csv("assets/YEG25-InitialSites.csv") |> st_as_sf(coords = c
 
 # What's all this noise about?
 
---MAKE A CHANGE--
-
 Urban noise is increasingly recognized for its detrimental effects on both human health and biodiversity. This project aims to initiate a long-term monitoring effort to assess the impact of urban noise on natural areas within the City of Edmonton. The goal is to develop a comprehensive framework and actionable tools to reduce noise pollution and support urban biodiversity monitoring, fostering quieter, more sustainable urban environments. This project is in collaboration with the City of Edmonton Arts, Heritage and Nature Experience team, the [University of Alberta](https://www.ualberta.ca) and the [SENSR](sensr.ca) unit of [Biodiversity Pathways Ltd.](https://biodiversitypathways.ca/), itself a national subsidiary of the [Alberta Biodiversity Monitoring Institute](abmi.ca), which is a not-for-profit that tracks changes in wildlife and their habitats across Alberta, working collaboratively to provide ongoing, relevant, and scientifically credible information about our living resources.
 
 ::: {style="display: flex; justify-content: center; align-items: center; gap: 20px; padding: 20px;"}

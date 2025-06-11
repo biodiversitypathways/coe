@@ -9,7 +9,7 @@
 <meta name="author" content="Alex MacPhail">
 <meta name="author" content="Catherine Shier">
 <meta name="author" content="Erin Bayne">
-<meta name="dcterms.date" content="2025-05-05">
+<meta name="dcterms.date" content="2025-06-11">
 
 <title>Analyzing natural area sensitivity thresholds for humans and species diversity in Alberta’s Capital City</title>
 <style>
@@ -181,7 +181,7 @@ div.csl-indent {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">May 5, 2025</p>
+      <p class="date">June 11, 2025</p>
     </div>
   </div>
   
@@ -200,6 +200,7 @@ div.csl-indent {
 </div>
 <section id="whats-all-this-noise-about" class="level1">
 <h1>What’s all this noise about?</h1>
+<p>–MAKE A CHANGE–</p>
 <p>Urban noise is increasingly recognized for its detrimental effects on both human health and biodiversity. This project aims to initiate a long-term monitoring effort to assess the impact of urban noise on natural areas within the City of Edmonton. The goal is to develop a comprehensive framework and actionable tools to reduce noise pollution and support urban biodiversity monitoring, fostering quieter, more sustainable urban environments. This project is in collaboration with the City of Edmonton Arts, Heritage and Nature Experience team, the <a href="https://www.ualberta.ca">University of Alberta</a> and the <a href="sensr.ca">SENSR</a> unit of <a href="https://biodiversitypathways.ca/">Biodiversity Pathways Ltd.</a>, itself a national subsidiary of the <a href="abmi.ca">Alberta Biodiversity Monitoring Institute</a>, which is a not-for-profit that tracks changes in wildlife and their habitats across Alberta, working collaboratively to provide ongoing, relevant, and scientifically credible information about our living resources.</p>
 <div style="display: flex; justify-content: center; align-items: center; gap: 20px; padding: 20px;">
 <p><a href="https://sensr.ca" target="_blank" style="text-decoration: none;"> <img src="SENSRlogo.png" alt="SENSR Logo" style="max-width: 100px; max-height: 100px; object-fit: contain;"> </a> <a href="https://biodiversitypathways.ca" target="_blank" style="text-decoration: none;"> <img src="BPlogo.png" alt="Biodiversity Pathways" style="max-width: 150px; max-height: 150px; object-fit: contain;"> </a> <a href="https://www.ualberta.ca/" target="_blank" style="text-decoration: none;"> <img src="UAlberta.png" alt="UofA" style="max-width: 150px; max-height: 150px; object-fit: contain;"> </a> <a href="https://www.edmonton.ca/city_government/environmental_stewardship/natural-areas" target="_blank" style="text-decoration: none;"> <img src="coelogo.png" alt="COE" style="max-width: 150px; max-height: 150px; object-fit: contain;"> </a></p>
@@ -273,7 +274,7 @@ Figure&nbsp;1: Monitoring locations within a 400 m buffer
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="sens-thresh_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="sens-thresh_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -330,18 +331,19 @@ mean of x mean of y
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">grepl</span>(<span class="st">"ZOO2"</span>, location) <span class="sc">~</span> <span class="st">"Edmonton Valley Zoo"</span>, </span>
 <span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">grepl</span>(<span class="st">"CRY"</span>, location) <span class="sc">~</span> <span class="st">"Crystallina Nera"</span>,</span>
 <span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">grepl</span>(<span class="st">"DUN"</span>, location) <span class="sc">~</span> <span class="st">"Dunluce"</span>,</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>                                <span class="cn">TRUE</span> <span class="sc">~</span> location),</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>           <span class="at">hour =</span> <span class="fu">hour</span>(Time)),</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(<span class="at">x =</span> hour, <span class="at">y =</span> LEQ_dB_A, <span class="at">group =</span> hour, <span class="at">fill =</span> is_weekend)) <span class="sc">+</span></span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis_d</span>(<span class="at">option =</span> <span class="st">"magma"</span>, <span class="at">name =</span> <span class="st">"Weekends"</span>) <span class="sc">+</span></span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(is_weekend <span class="sc">~</span> location) <span class="sc">+</span></span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Average Sound Pressure Level Over Time by Location"</span>, <span class="at">x =</span> <span class="st">"Hour of the Day"</span>, <span class="at">y =</span> <span class="st">"LEQ dB-A"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">grepl</span>(<span class="st">"ROR"</span>,location) <span class="sc">~</span> <span class="st">"Roper Road"</span>,</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>                                <span class="cn">TRUE</span> <span class="sc">~</span> location),</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>           <span class="at">hour =</span> <span class="fu">hour</span>(Time)),</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(<span class="at">x =</span> hour, <span class="at">y =</span> LEQ_dB_A, <span class="at">group =</span> hour, <span class="at">fill =</span> is_weekend)) <span class="sc">+</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis_d</span>(<span class="at">option =</span> <span class="st">"magma"</span>, <span class="at">name =</span> <span class="st">"Weekends"</span>) <span class="sc">+</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(is_weekend <span class="sc">~</span> location) <span class="sc">+</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Average Sound Pressure Level Over Time by Location"</span>, <span class="at">x =</span> <span class="st">"Hour of the Day"</span>, <span class="at">y =</span> <span class="st">"LEQ dB-A"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="sens-thresh_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="sens-thresh_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -350,18 +352,19 @@ mean of x mean of y
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">grepl</span>(<span class="st">"ZOO2"</span>, location) <span class="sc">~</span> <span class="st">"Edmonton Valley Zoo"</span>, </span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">grepl</span>(<span class="st">"CRY"</span>, location) <span class="sc">~</span> <span class="st">"Crystallina Nera"</span>,</span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">grepl</span>(<span class="st">"DUN"</span>, location) <span class="sc">~</span> <span class="st">"Dunluce"</span>,</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>                                <span class="cn">TRUE</span> <span class="sc">~</span> location),</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>           <span class="at">hour =</span> <span class="fu">hour</span>(Time)),</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(<span class="at">x =</span> julian, <span class="at">y =</span> LEQ_dB_A, <span class="at">group =</span> julian, <span class="at">fill =</span> is_weekend)) <span class="sc">+</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis_d</span>(<span class="at">option =</span> <span class="st">"magma"</span>, <span class="at">name =</span> <span class="st">"Weekends"</span>) <span class="sc">+</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"LEQ dB-A Over Time by Location"</span>, <span class="at">x =</span> <span class="st">"Hour of the Day"</span>, <span class="at">y =</span> <span class="st">"LEQ dB-A"</span>) <span class="sc">+</span></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>location)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">grepl</span>(<span class="st">"ROR"</span>,location) <span class="sc">~</span> <span class="st">"Roper Road"</span>,</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>                                <span class="cn">TRUE</span> <span class="sc">~</span> location),</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>           <span class="at">hour =</span> <span class="fu">hour</span>(Time)),</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(<span class="at">x =</span> julian, <span class="at">y =</span> LEQ_dB_A, <span class="at">group =</span> julian, <span class="at">fill =</span> is_weekend)) <span class="sc">+</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis_d</span>(<span class="at">option =</span> <span class="st">"magma"</span>, <span class="at">name =</span> <span class="st">"Weekends"</span>) <span class="sc">+</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"LEQ dB-A Over Time by Location"</span>, <span class="at">x =</span> <span class="st">"Hour of the Day"</span>, <span class="at">y =</span> <span class="st">"LEQ dB-A"</span>) <span class="sc">+</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>location)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="sens-thresh_files/figure-html/unnamed-chunk-8-2.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="sens-thresh_files/figure-html/unnamed-chunk-4-2.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>

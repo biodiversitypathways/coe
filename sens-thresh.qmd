@@ -241,6 +241,11 @@ When a decibel meter is deployed, securely attach it to something in order to mi
 #| warning: false
 #| message: false
 
+drive_auth()
+folder_id <- "1SsB8gepdiqhyFOTkrTe_rdik6A3a9rS1"
+folder <- drive_get(as_id(folder_id))
+print(folder)
+
 dec <- dir_ls("./spl/date", regexp = ".xls") |>
   map_dfr(
     ~read_csv(.x, skip = 2) |>
@@ -275,7 +280,7 @@ dec2 <- dir_ls("./spl/time", regexp = ".xls") |>
                      ymd_hms(),
          across(c(Time, L_Max_dB_A, LEQ_dB_A, L_Min_dB_A, L_PeakdB_A), as.numeric),
          start_time = start_time + seconds(Time)) |>
-  select(-Time) |>
+  dplyr::select(-Time) |>
   relocate(start_time) |>
   rename(Time = start_time)
 
@@ -297,7 +302,7 @@ dec_filtered <- dec_f |>
   group_by(location, Time_minute) |>
   filter(row_number() == 1) |>
   ungroup() |>
-  inner_join(wlj |> select(location, latitude, longitude), by = "location")
+  inner_join(wlj |> dplyr::select(location, latitude, longitude), by = "location")
   
 
 ```
@@ -315,6 +320,24 @@ ggplot(dec_filtered, aes(x = Time, y = LEQ_dB_A, colour = is_weekend)) +
     x = "Time",
     y = "LEQ dB-A"
   )
+
+dec_filtered <- dec_filtered |> 
+  mutate(day_of_week = wday(Time, label = TRUE, abbr = TRUE))
+
+dec_filtered |>
+  group_by(location) |>
+  summarise(mean = mean(LEQ_dB_A)) |>
+  arrange(-mean) |>
+  view()
+
+ggplot(dec_filtered |>
+         mutate(hour = hour(Time)) |>
+         filter(grepl('CAR|KER|RVK',location)) |>
+         mutate(is_weekend = ifelse(is_weekend, "Weekend", "Weekday")),  # Convert boolean to character
+       aes(x = hour, y = LEQ_dB_A, group = hour, fill = is_weekend)) +
+  geom_boxplot() +
+  facet_grid(is_weekend ~ location) +
+  theme_bw()
 
 ```
 
@@ -351,18 +374,12 @@ dec_filtered <- dec_filtered |>
 
 ggplot(
   dec_filtered |> 
-    mutate(location = case_when(grepl("RVK", location) ~ "Kinnaird Ravine", 
-                                grepl("ZOO2", location) ~ "Edmonton Valley Zoo", 
-                                grepl("CRY", location) ~ "Crystallina Nera",
-                                grepl("DUN", location) ~ "Dunluce",
-                                grepl("ROR",location) ~ "Roper Road",
-                                TRUE ~ location),
-           hour = hour(Time)),
-  aes(x = hour, y = LEQ_dB_A, group = hour, fill = is_weekend)) +
-  geom_boxplot() +
-  scale_fill_viridis_d(option = "magma", name = "Weekends") +
+  mutate(hour = hour(Time)),
+  aes(x = hour, y = LEQ_dB_A, group = hour, colour = is_weekend)) +
+  geom_point() +
+  scale_colour_viridis_d(option = "magma", name = "Weekends") +
   theme_bw() +
-  facet_grid(is_weekend ~ location) +
+  facet_wrap(~location) +
   labs(title = "Average Sound Pressure Level Over Time by Location", x = "Hour of the Day", y = "LEQ dB-A")
 
 
@@ -399,42 +416,40 @@ grid <- st_make_grid(
 
 grid_df <- grid |> st_coordinates() |> as_tibble()
 
-kriging_model <- gstat::gstat(
-  formula = LEQ_dB_A ~ 1, 
-  data = dec_sf
-)
-kriging_result <- predict(kriging_model, newdata = grid)
 
-grid$LEQ_dB_A <- kriging_result$var1.pred
 
-# Plot Heatmap
-ggplot() +
-  geom_sf(data = grid, aes(fill = LEQ_dB_A), color = NA) +
-  scale_fill_viridis_c(name = "LEQ dB-A") +
+
+dec_hourly <- dec_hourly %>%
+  filter(latitude >= -90 & latitude <= 90, longitude >= -180 & longitude <= 180) %>%  # Valid coordinates
+  mutate(avg_LEQ_dB_A = ifelse(avg_LEQ_dB_A < 0, NA, avg_LEQ_dB_A))  # Remove invalid sound levels
+
+# Debugging: Print summary of the dataset
+print(summary(dec_hourly))
+
+# Plot heatmap
+heatmap_plot <- ggplot(dec_hourly, aes(x = longitude, y = latitude)) +
+  geom_tile(aes(fill = avg_LEQ_dB_A)) +  # Create heatmap
+  scale_fill_viridis_c(
+    name = "Noise Level (dB-A)",
+    option = "magma",
+    limits = range(dec_hourly$avg_LEQ_dB_A, na.rm = TRUE),  # Dynamic range
+    oob = scales::squish  # Handle values outside range
+  ) +
+  theme_minimal() +
+  coord_fixed() +  # Ensure proper aspect ratio for geographic data
   labs(
-    title = "Noise Map (Kriging Interpolation)",
+    title = "Heatmap of Noise Levels in Edmonton",
     x = "Longitude",
     y = "Latitude"
-  ) +
-  theme_minimal(base_size = 12)
+  )
 
 
-idw_model <- gstat::gstat(formula = LEQ_dB_A ~ 1, data = dec_sf)
-idw_result <- predict(idw_model, newdata = grid)
 
-# Merge IDW Results with Grid
-grid$LEQ_dB_A <- idw_result$var1.pred
+# Step 2: Convert to sf object and transform to planar coordinates
+dec_hourly_sf <- st_as_sf(dec_hourly, coords = c("longitude", "latitude"), crs = 4326)
+dec_hourly_sf_planar <- st_transform(dec_hourly_sf, crs = 3857)
 
-# Plot Heatmap
-ggplot() +
-  geom_sf(data = grid, aes(fill = LEQ_dB_A), color = NA) +
-  scale_fill_viridis_c(name = "LEQ dB-A") +
-  labs(
-    title = "Noise Map (IDW Interpolation)",
-    x = "Longitude",
-    y = "Latitude"
-  ) +
-  theme_minimal(base_size = 12)
+
 
 ```
 
@@ -535,6 +550,158 @@ print(savings)
 
 ```
 
-# Results
 
-Stay tuned for results as they unfold!
+
+```{r}
+
+grid <- st_make_grid(
+  st_as_sfc(edmonton_bbox),
+  cellsize = 0.01,  # 1 km grid cells (0.01 degrees ~ 1 km at mid-latitudes)
+  what = "centers"
+) %>%
+  st_as_sf()
+
+vgm_models <- list(
+  "Spherical" = vgm("Sph"),
+  "Exponential" = vgm("Exp"),
+  "Gaussian" = vgm("Gau")
+)
+
+# Fit and plot each model
+for (model in names(vgm_models)) {
+  vgm_fit <- fit.variogram(variogram_model, model = vgm_models[[model]])
+  cat("\n", model, "\n")
+  plot(variogram_model, vgm_fit)
+}
+
+cv <- krige.cv(
+  formula = avg_LEQ_dB_A ~ 1,
+  locations = as(dec_hourly_sf, "Spatial"),
+  model = vgm_model
+)
+
+# Summarize cross-validation results
+summary(cv)
+plot(cv$observed, cv$predicted, xlab = "Observed", ylab = "Predicted", main = "Cross-Validation")
+abline(0, 1, col = "red")
+
+ggplot() +
+  geom_sf(data = kriging_result_sf, aes(fill = var1.pred)) +
+  geom_sf(data = roads, color = "white", size = 0.2) +
+  scale_fill_viridis_c(name = "Predicted Noise (dB-A)", option = "magma") +
+  theme_minimal() +
+  labs(title = "Predicted Noise Levels") +
+  coord_sf()
+
+ggplot() +
+  geom_sf(data = kriging_result_sf, aes(fill = var1.var)) +
+  geom_sf(data = roads, color = "white", size = 0.2) +
+  scale_fill_viridis_c(name = "Prediction Variance", option = "inferno") +
+  theme_minimal() +
+  labs(title = "Prediction Variance (Uncertainty)") +
+  coord_sf()
+
+dec_hourly_grid <- dec_hourly %>%
+  mutate(
+    lon.group = cut(
+      longitude,
+      breaks = seq(floor(min(longitude)), ceiling(max(longitude)), by = 0.01),
+      labels = seq(floor(min(longitude)) + 0.005, ceiling(max(longitude)), by = 0.01)
+    ),
+    lat.group = cut(
+      latitude,
+      breaks = seq(floor(min(latitude)), ceiling(max(latitude)), by = 0.01),
+      labels = seq(floor(min(latitude)) + 0.005, ceiling(max(latitude)), by = 0.01)
+    )
+  ) %>%
+  group_by(lon.group, lat.group) %>%
+  summarise(
+    avg_LEQ_dB_A = mean(avg_LEQ_dB_A, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(across(where(is.factor), ~ as.numeric(as.character(.x))))  # Convert factors to numeric
+
+# Heatmap visualization
+heatmap_plot <- ggplot(dec_hourly_grid, aes(x = lon.group, y = lat.group, fill = avg_LEQ_dB_A)) +
+  geom_raster() +  # Use raster for grid-like visualization
+  scale_fill_viridis_c(name = "Noise Level (dB-A)", option = "magma") +
+  coord_fixed() +  # Maintain aspect ratio
+  theme_minimal() +
+  labs(
+    title = "Heatmap of Noise Levels in Edmonton",
+    x = "Longitude",
+    y = "Latitude"
+  )
+
+roads <- st_read("geospatial_assets/Roads/Roads.shp")
+
+dec_hourly_sf <- dec_hourly_grid %>%
+  mutate(
+    lon = as.numeric(as.character(lon.group)),
+    lat = as.numeric(as.character(lat.group))
+  ) %>%
+  st_as_sf(coords = c("lon", "lat"), crs = 4326)
+
+st_bbox(dec_hourly_sf)
+st_bbox(roads)
+target_crs <- st_crs(roads)  # Use the CRS of `roads`
+dec_hourly_sf <- st_transform(dec_hourly_sf, crs = target_crs)
+variogram_model <- variogram(avg_LEQ_dB_A ~ 1, as(dec_hourly_sf, "Spatial"))
+vgm_model <- fit.variogram(variogram_model, model = vgm("Sph"))  # Spherical model
+plot(variogram_model, vgm_model)
+
+edmonton_bbox <- st_bbox(roads)  # Bounding box of Edmonton
+grid <- st_make_grid(
+  st_as_sfc(edmonton_bbox), 
+  cellsize = 0.001,  # Adjust cell size for resolution
+  what = "centers"
+) %>%
+  st_as_sf()
+
+# Clip the grid to the bounding box of Edmonton or roads
+grid <- st_intersection(grid, st_as_sfc(edmonton_bbox))
+
+kriging_result <- krige(
+  formula = avg_LEQ_dB_A ~ 1, 
+  locations = as(dec_hourly_sf, "Spatial"), 
+  newdata = as(grid, "Spatial"), 
+  model = vgm_model
+)
+
+# Convert the result back to an sf object
+kriging_result_sf <- st_as_sf(kriging_result)
+
+ggplot() +
+  geom_sf(data = kriging_result_sf, aes(fill = var1.pred)) +
+  geom_sf(data = roads, color = "white") +
+  scale_fill_viridis_c(option = "magma") +
+  theme_minimal()
+
+road_buffer <- st_buffer(roads, dist = 50)  # Example buffer
+distance_to_roads <- st_distance(grid, road_buffer)
+
+# Include as a covariate in kriging
+kriging_result <- krige(
+  formula = avg_LEQ_dB_A ~ distance_to_roads,
+  locations = as(dec_hourly_sf, "Spatial"),
+  newdata = as(grid, "Spatial"),
+  model = vgm_model
+)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

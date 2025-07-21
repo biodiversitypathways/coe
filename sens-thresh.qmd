@@ -53,6 +53,7 @@ library(kableExtra)
 library(plotly)
 library(DT)
 library(fs)
+library(patchwork)
 
 load('coe.RData')
 #save.image('coe.RData')
@@ -69,8 +70,8 @@ load('coe.RData')
 
 wt_auth()
 
-coe_2024 <- wt_download_report(1750, 'ARU', 'main', T)
-coe_ini_2025 <- read_csv("assets/YEG25-InitialSites.csv") |> st_as_sf(coords = c("longitude","latitude"), crs = 4326)
+coe <- wt_download_report(1750, 'ARU', 'main', T)
+coe_2025 <- coe |> st_as_sf(coords = c("longitude","latitude"), crs = 4326)
 
 ```
 
@@ -120,7 +121,7 @@ generate_random_point <- function(centroid, radius = 400) {
   c(new_x, new_y)
 }
 
-coe_2025_locs_random <- coe_ini_2025 %>%
+coe_2025_locs_random <- coe_2025 %>%
   sf::st_coordinates() %>%
   as.data.frame() %>%
   rowwise() %>%
@@ -302,190 +303,32 @@ dec_filtered <- dec_f |>
   group_by(location, Time_minute) |>
   filter(row_number() == 1) |>
   ungroup() |>
-  inner_join(wlj |> dplyr::select(location, latitude, longitude), by = "location")
-  
-
-```
-
-```{r}
-#| eval: true
-# Plot with weekend coloring
-ggplot(dec_filtered, aes(x = Time, y = LEQ_dB_A, colour = is_weekend)) +
-  geom_point() +
-  scale_colour_viridis_d(option = "magma") +
-  facet_wrap(~location, ncol = 4) +
-  theme_bw() +
-  labs(
-    title = "LEQ dB-A Over Time by Location",
-    x = "Time",
-    y = "LEQ dB-A"
-  )
-
-dec_filtered <- dec_filtered |> 
+  inner_join(wlj |> dplyr::select(location, latitude, longitude), by = "location") |>
   mutate(day_of_week = wday(Time, label = TRUE, abbr = TRUE))
 
-dec_filtered |>
-  group_by(location) |>
-  summarise(mean = mean(LEQ_dB_A)) |>
-  arrange(-mean) |>
-  view()
-
-ggplot(dec_filtered |>
-         mutate(hour = hour(Time)) |>
-         filter(grepl('CAR|KER|RVK',location)) |>
-         mutate(is_weekend = ifelse(is_weekend, "Weekend", "Weekday")),  # Convert boolean to character
-       aes(x = hour, y = LEQ_dB_A, group = hour, fill = is_weekend)) +
+p1 <- dec_filtered %>%
+  mutate(hour = hour(Time)) %>%
+  filter(is_weekend == TRUE) %>%
+  ggplot(aes(x = factor(hour), y = LEQ_dB_A)) +
   geom_boxplot() +
-  facet_grid(is_weekend ~ location) +
-  theme_bw()
-
-```
-
-```{r}
-#| eval: true
-
-dec_filtered <- dec_filtered |>
-  mutate(hour = hour(Time))  # Add an 'hour' column to easily filter time periods
-
-# Subset data for 6 AM - 9 AM
-morning_data <- dec_filtered |>
-  filter(hour >= 6 & hour < 9)
-
-# Subset data for the rest of the day (you can choose different time windows)
-other_data <- dec_filtered |>
-  filter(hour < 6 | hour >= 9)
-
-# Compare average LEQ_dB_A between 6 AM - 9 AM and other times
-morning_avg <- mean(morning_data$LEQ_dB_A, na.rm = TRUE)
-other_avg <- mean(other_data$LEQ_dB_A, na.rm = TRUE)
-
-# Print averages
-cat("Average LEQ during 6AM - 9AM: ", morning_avg, "\n")
-cat("Average LEQ during other times of the day: ", other_avg, "\n")
-
-# Perform t-test to check if there's a significant difference
-t_test_result <- t.test(morning_data$LEQ_dB_A, other_data$LEQ_dB_A, na.rm = TRUE)
-
-# Print the result of the t-test
-print(t_test_result)
-
-dec_filtered <- dec_filtered |>
-  mutate(julian = yday(Time))
-
-ggplot(
-  dec_filtered |> 
-  mutate(hour = hour(Time)),
-  aes(x = hour, y = LEQ_dB_A, group = hour, colour = is_weekend)) +
-  geom_point() +
-  scale_colour_viridis_d(option = "magma", name = "Weekends") +
-  theme_bw() +
+  coord_polar(start = 0) +
   facet_wrap(~location) +
-  labs(title = "Average Sound Pressure Level Over Time by Location", x = "Hour of the Day", y = "LEQ dB-A")
+  scale_x_discrete(breaks = as.character(seq(0, 23, by = 3))) +
+  labs(x = "Hour of Day (0-23)", y = "LEQ (dB A)") +
+  theme_minimal()
 
-
-ggplot(dec_filtered |> 
-    mutate(location = case_when(grepl("RVK", location) ~ "Kinnaird Ravine", 
-                                grepl("ZOO2", location) ~ "Edmonton Valley Zoo", 
-                                grepl("CRY", location) ~ "Crystallina Nera",
-                                grepl("DUN", location) ~ "Dunluce",
-                                grepl("ROR",location) ~ "Roper Road",
-                                TRUE ~ location),
-           hour = hour(Time)),
-  aes(x = julian, y = LEQ_dB_A, group = julian, fill = is_weekend)) +
+p2 <- dec_filtered %>%
+  mutate(hour = hour(Time)) %>%
+  filter(is_weekend == FALSE) %>%
+  ggplot(aes(x = factor(hour), y = LEQ_dB_A)) +
   geom_boxplot() +
-  scale_fill_viridis_d(option = "magma", name = "Weekends") +
-  theme_bw() +
-  labs(title = "LEQ dB-A Over Time by Location", x = "Hour of the Day", y = "LEQ dB-A") +
-  facet_wrap(~location)
+  coord_polar(start = 0) +
+  facet_wrap(~location) +
+  scale_x_discrete(breaks = as.character(seq(0, 23, by = 3))) +
+  labs(x = "Hour of Day (0-23)", y = "LEQ (dB A)") +
+  theme_minimal()
 
-```
-
-```{r}
-#| eval: false 
-#| include: false
-
-dec_sf <- dec_filtered |>
-  st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
-
-grid <- st_make_grid(
-  st_bbox(dec_sf),
-  cellsize = 1000, # Adjust grid resolution as needed
-  what = "centers"
-) |> 
-  st_as_sf()
-
-grid_df <- grid |> st_coordinates() |> as_tibble()
-
-
-
-
-dec_hourly <- dec_hourly %>%
-  filter(latitude >= -90 & latitude <= 90, longitude >= -180 & longitude <= 180) %>%  # Valid coordinates
-  mutate(avg_LEQ_dB_A = ifelse(avg_LEQ_dB_A < 0, NA, avg_LEQ_dB_A))  # Remove invalid sound levels
-
-# Debugging: Print summary of the dataset
-print(summary(dec_hourly))
-
-# Plot heatmap
-heatmap_plot <- ggplot(dec_hourly, aes(x = longitude, y = latitude)) +
-  geom_tile(aes(fill = avg_LEQ_dB_A)) +  # Create heatmap
-  scale_fill_viridis_c(
-    name = "Noise Level (dB-A)",
-    option = "magma",
-    limits = range(dec_hourly$avg_LEQ_dB_A, na.rm = TRUE),  # Dynamic range
-    oob = scales::squish  # Handle values outside range
-  ) +
-  theme_minimal() +
-  coord_fixed() +  # Ensure proper aspect ratio for geographic data
-  labs(
-    title = "Heatmap of Noise Levels in Edmonton",
-    x = "Longitude",
-    y = "Latitude"
-  )
-
-
-
-# Step 2: Convert to sf object and transform to planar coordinates
-dec_hourly_sf <- st_as_sf(dec_hourly, coords = c("longitude", "latitude"), crs = 4326)
-dec_hourly_sf_planar <- st_transform(dec_hourly_sf, crs = 3857)
-
-
-
-```
-
-```{r}
-#| eval: false 
-#| include: false
-
-
-# ─── Prepare your sample‐point data for ggplot ─────────────────────────────────
-# pts_df is a SpatialPointsDataFrame; extract coords + avg_LEQ into a data.frame:
-pts_plot <- data.frame(coordinates(pts_df))
-names(pts_plot) <- c("longitude", "latitude")
-pts_plot$avg_LEQ <- pts_df$avg_LEQ
-
-# ─── Plot the filled IDW heatmap + sample points ───────────────────────────────
-ggplot() +
-  # tiled heatmap
-  geom_tile(data = idw_df,
-            aes(x = x, y = y, fill = pred_LEQ)) +
-  # overlay your measurement locations
-  geom_point(data = pts_plot,
-             aes(x = longitude, y = latitude),
-             color = "black", size = 2) +
-  scale_fill_viridis_c(name = "Pred LEQ (dB)", na.value = NA) +
-  coord_equal() +
-  labs(
-    title = "Geographic Noise Heatmap (IDW)",
-    x     = "Longitude",
-    y     = "Latitude"
-  ) +
-  theme_minimal() +
-  theme(
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank()
-  )
-
+p1 + p2
 
 ```
 
@@ -550,9 +393,81 @@ print(savings)
 
 ```
 
-
+## Kriging modelling
 
 ```{r}
+
+
+#| eval: false 
+#| include: false
+
+pts_plot <- data.frame(coordinates(pts_df))
+names(pts_plot) <- c("longitude", "latitude")
+pts_plot$avg_LEQ <- pts_df$avg_LEQ
+
+ggplot() +
+  # tiled heatmap
+  geom_tile(data = idw_df,
+            aes(x = x, y = y, fill = pred_LEQ)) +
+  # overlay your measurement locations
+  geom_point(data = pts_plot,
+             aes(x = longitude, y = latitude),
+             color = "black", size = 2) +
+  scale_fill_viridis_c(name = "Pred LEQ (dB)", na.value = NA) +
+  coord_equal() +
+  labs(
+    title = "Geographic Noise Heatmap (IDW)",
+    x     = "Longitude",
+    y     = "Latitude"
+  ) +
+  theme_minimal() +
+  theme(
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+dec_sf <- dec_filtered |>
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+
+grid <- st_make_grid(
+  st_bbox(dec_sf),
+  cellsize = 1000, # Adjust grid resolution as needed
+  what = "centers"
+) |> 
+  st_as_sf()
+
+grid_df <- grid |> st_coordinates() |> as_tibble()
+
+dec_hourly <- dec_hourly %>%
+  filter(latitude >= -90 & latitude <= 90, longitude >= -180 & longitude <= 180) %>%  # Valid coordinates
+  mutate(avg_LEQ_dB_A = ifelse(avg_LEQ_dB_A < 0, NA, avg_LEQ_dB_A))  # Remove invalid sound levels
+
+# Debugging: Print summary of the dataset
+print(summary(dec_hourly))
+
+# Plot heatmap
+heatmap_plot <- ggplot(dec_hourly, aes(x = longitude, y = latitude)) +
+  geom_tile(aes(fill = avg_LEQ_dB_A)) +  # Create heatmap
+  scale_fill_viridis_c(
+    name = "Noise Level (dB-A)",
+    option = "magma",
+    limits = range(dec_hourly$avg_LEQ_dB_A, na.rm = TRUE),  # Dynamic range
+    oob = scales::squish  # Handle values outside range
+  ) +
+  theme_minimal() +
+  coord_fixed() +  # Ensure proper aspect ratio for geographic data
+  labs(
+    title = "Heatmap of Noise Levels in Edmonton",
+    x = "Longitude",
+    y = "Latitude"
+  )
+
+
+
+# Step 2: Convert to sf object and transform to planar coordinates
+dec_hourly_sf <- st_as_sf(dec_hourly, coords = c("longitude", "latitude"), crs = 4326)
+dec_hourly_sf_planar <- st_transform(dec_hourly_sf, crs = 3857)
+
 
 grid <- st_make_grid(
   st_as_sfc(edmonton_bbox),
@@ -690,7 +605,10 @@ kriging_result <- krige(
 
 ```
 
+# Results
 
+
+# Discussion 
 
 
 

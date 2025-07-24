@@ -23,6 +23,9 @@ author:
   - name: "Erin Bayne"
     affiliation:
       - "University of Alberta, Alberta Biodiversity Monitoring Institute"
+  - name: "Martin Hinojosa"
+    affiliation:
+      - "University of Alberta"
 editor: visual
 bibliography: references.bib
 nocite: '@*'
@@ -607,19 +610,4 @@ kriging_result <- krige(
 
 # Results
 
-
-# Discussion 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# Discussion

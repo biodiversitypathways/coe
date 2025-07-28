@@ -87,7 +87,7 @@ coe_2025 <- coe |> st_as_sf(coords = c("longitude","latitude"), crs = 4326)
 Urban noise is increasingly recognized for its detrimental effects on both human health and biodiversity. This project aims to initiate a long-term monitoring effort to assess the impact of urban noise on natural areas within the City of Edmonton. The goal is to develop a comprehensive framework and actionable tools to reduce noise pollution and support urban biodiversity monitoring, fostering quieter, more sustainable urban environments. This project is in collaboration with the City of Edmonton Arts, Heritage and Nature Experience team, the [University of Alberta](https://www.ualberta.ca) and the [SENSR](sensr.ca) unit of [Biodiversity Pathways Ltd.](https://biodiversitypathways.ca/), itself a national subsidiary of the [Alberta Biodiversity Monitoring Institute](abmi.ca), which is a not-for-profit that tracks changes in wildlife and their habitats across Alberta, working collaboratively to provide ongoing, relevant, and scientifically credible information about our living resources.
 
 ::: {style="display: flex; justify-content: center; align-items: center; gap: 20px; padding: 20px;"}
-<a href="https://sensr.ca" target="_blank" style="text-decoration: none;"> <img src="SENSRlogo.png" alt="SENSR Logo" style="max-width: 100px; max-height: 100px; object-fit: contain;"/> </a> <a href="https://biodiversitypathways.ca" target="_blank" style="text-decoration: none;"> <img src="BPlogo.png" alt="Biodiversity Pathways" style="max-width: 150px; max-height: 150px; object-fit: contain;"/> </a> <a href="https://www.ualberta.ca/" target="_blank" style="text-decoration: none;"> <img src="UAlberta.png" alt="UofA" style="max-width: 150px; max-height: 150px; object-fit: contain;"/> </a> <a href="https://www.edmonton.ca/city_government/environmental_stewardship/natural-areas" target="_blank" style="text-decoration: none;"> <img src="coelogo.png" alt="COE" style="max-width: 150px; max-height: 150px; object-fit: contain;"/> </a>
+<a href="https://sensr.ca" target="_blank" style="text-decoration: none;"> <img src="assets/SENSRlogo.png" alt="SENSR Logo" style="max-width: 100px; max-height: 100px; object-fit: contain;"/> </a> <a href="https://biodiversitypathways.ca" target="_blank" style="text-decoration: none;"> <img src="assets/BPlogo.png" alt="Biodiversity Pathways" style="max-width: 150px; max-height: 150px; object-fit: contain;"/> </a> <a href="https://www.ualberta.ca/" target="_blank" style="text-decoration: none;"> <img src="assets/UAlberta.png" alt="UofA" style="max-width: 150px; max-height: 150px; object-fit: contain;"/> </a> <a href="https://www.edmonton.ca/city_government/environmental_stewardship/natural-areas" target="_blank" style="text-decoration: none;"> <img src="assets/coelogo.png" alt="COE" style="max-width: 150px; max-height: 150px; object-fit: contain;"/> </a>
 :::
 
 ::: {.callout-note collapse="true" style="background-color: #f4f4f4; padding: 20px;"}
@@ -393,6 +393,8 @@ print(savings)
 
 ```
 
+# Results
+
 ## Kriging modelling
 
 ```{r}
@@ -437,7 +439,11 @@ ggplot() +
   geom_sf(data = coe_bounds, fill = NA, color = "black") +
   scale_fill_viridis_c(name = "Interpolated LEQ (dB)", option = "inferno") +
   coord_sf() +
-  labs(title = "Interpolated Noise Heatmap — Edmonton") +
+  labs(title = "Interpolated noise heatmap") +
   theme_minimal()
 
 ```
+
+# Discussion
+
+Stay tuned for results!

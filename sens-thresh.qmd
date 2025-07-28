@@ -426,6 +426,11 @@ raster_idw <- mask(raster_idw, as_Spatial(coe_bounds))
 
 raster_df <- as.data.frame(rasterToPoints(raster_idw))
 colnames(raster_df) <- c("x", "y", "mean_LEQ")
+```
+
+```{r}
+#| eval: true 
+#| include: true
 
 ggplot() +
   geom_raster(data = raster_df, aes(x = x, y = y, fill = mean_LEQ)) +

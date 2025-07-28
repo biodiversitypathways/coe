@@ -57,6 +57,10 @@ library(plotly)
 library(DT)
 library(fs)
 library(patchwork)
+library(raster)
+library(gstat)
+library(sp)
+library(rmapshaper)
 
 load('coe.RData')
 #save.image('coe.RData')
@@ -71,9 +75,9 @@ load('coe.RData')
 #| warning: false
 #| message: false
 
-wt_auth()
+wt_auth(force = T)
 
-coe <- wt_download_report(1750, 'ARU', 'main', T)
+coe <- wt_download_report(1750, 'ARU', 'main', T) |> filter(!is.na(latitude))
 coe_2025 <- coe |> st_as_sf(coords = c("longitude","latitude"), crs = 4326)
 
 ```
@@ -131,7 +135,7 @@ coe_2025_locs_random <- coe_2025 %>%
   mutate(random_point = list(generate_random_point(c(X, Y), 500))) %>%
   ungroup() %>%
   mutate(random_point = map(random_point, ~sf::st_point(.x))) %>%
-  sf::st_as_sf(coords = c("X", "Y"), crs = sf::st_crs(coe_ini_2025))
+  sf::st_as_sf(coords = c("X", "Y"), crs = sf::st_crs(coe_2025))
 
 coe_2025_random_buffered <- coe_2025_locs_random %>%
   sf::st_buffer(dist = 500)
@@ -215,7 +219,7 @@ ggplot(data = veg_areas) +
   geom_sf(aes(fill = ifelse(Maintainer == "Parks", "Parks", "Other")), alpha = 0.7) + # Polygons
   geom_sf(data = bike_routes, aes(color = "grey", size = 1)) +
   geom_sf(data = roads, aes(color = "black", size = 2)) +
-  geom_sf(data = coe_ini_2025, aes(color = "Locations"), size = 4) + # Points layer 
+  geom_sf(data = coe_2025, aes(color = "Locations"), size = 4) + # Points layer 
   scale_fill_manual(values = custom_colors, name = "Maintainer") +
   scale_color_manual(values = c("Locations" = "blue"), name = "Locations") + # Blue color for points
   theme_minimal() +
@@ -245,12 +249,7 @@ When a decibel meter is deployed, securely attach it to something in order to mi
 #| warning: false
 #| message: false
 
-drive_auth()
-folder_id <- "1SsB8gepdiqhyFOTkrTe_rdik6A3a9rS1"
-folder <- drive_get(as_id(folder_id))
-print(folder)
-
-dec <- dir_ls("./spl/date", regexp = ".xls") |>
+decibel_dates <- dir_ls("./spl/date/date", regexp = ".xls") |>
   map_dfr(
     ~read_csv(.x, skip = 2) |>
       mutate(
@@ -266,7 +265,7 @@ dec <- dir_ls("./spl/date", regexp = ".xls") |>
   mutate(Time = ymd_hms(Time),
          across(c(L_Max_dB_A, LEQ_dB_A, L_Min_dB_A, L_PeakdB_A), as.numeric))
 
-dec2 <- dir_ls("./spl/time", regexp = ".xls") |>
+decibel_times <- dir_ls("./spl/time", regexp = ".xls") |>
   map_dfr(
     ~read_csv(.x, skip = 2) |>
       mutate(
@@ -288,28 +287,26 @@ dec2 <- dir_ls("./spl/time", regexp = ".xls") |>
   relocate(start_time) |>
   rename(Time = start_time)
 
-dec_f <- bind_rows(dec, dec2)
+decibel_meter_data <- bind_rows(decibel_dates, decibel_times)
 
-wl <- wt_get_locations("COE")
+coe_locations <- wt_get_locations("COE") |>
+  as_tibble() |>
+  unnest(everything()) |>
+  mutate(location = str_replace_all(location,"-",""))
 
-wlj <- wl |>
-  mutate(location = str_replace_all(location,"-","")) |>
-  unnest()
-
-dec_filtered <- dec_f |>
+decibels_filtered <- decibel_meter_data |>
   group_by(location) |>
-  mutate(
-    Time_minute = floor_date(Time, "minute"),
-    is_weekend = wday(Time, label = TRUE) %in% c("Sat", "Sun")  # Add weekend indicator
-  ) |> 
+  mutate(Time_minute = floor_date(Time, "minute"),
+         is_weekend = wday(Time, label = TRUE) %in% c("Sat", "Sun")) |> 
   ungroup() |>
   group_by(location, Time_minute) |>
   filter(row_number() == 1) |>
   ungroup() |>
-  inner_join(wlj |> dplyr::select(location, latitude, longitude), by = "location") |>
-  mutate(day_of_week = wday(Time, label = TRUE, abbr = TRUE))
+  inner_join(coe_locations |> select(location, latitude, longitude), by = "location") |>
+  mutate(day_of_week = wday(Time, label = TRUE, abbr = TRUE)) |>
+  select(-8)
 
-p1 <- dec_filtered %>%
+p1 <- decibels_filtered %>%
   mutate(hour = hour(Time)) %>%
   filter(is_weekend == TRUE) %>%
   ggplot(aes(x = factor(hour), y = LEQ_dB_A)) +
@@ -320,7 +317,7 @@ p1 <- dec_filtered %>%
   labs(x = "Hour of Day (0-23)", y = "LEQ (dB A)") +
   theme_minimal()
 
-p2 <- dec_filtered %>%
+p2 <- decibels_filtered %>%
   mutate(hour = hour(Time)) %>%
   filter(is_weekend == FALSE) %>%
   ggplot(aes(x = factor(hour), y = LEQ_dB_A)) +
@@ -399,215 +396,43 @@ print(savings)
 ## Kriging modelling
 
 ```{r}
-
-
 #| eval: false 
 #| include: false
 
-pts_plot <- data.frame(coordinates(pts_df))
-names(pts_plot) <- c("longitude", "latitude")
-pts_plot$avg_LEQ <- pts_df$avg_LEQ
+noise_summary <- decibels_filtered |>
+  filter(!is.na(latitude)) |>
+  group_by(latitude, longitude) |>
+  summarise(mean_LEQ = mean(LEQ_dB_A, na.rm = TRUE)) |>
+  ungroup()
 
-ggplot() +
-  # tiled heatmap
-  geom_tile(data = idw_df,
-            aes(x = x, y = y, fill = pred_LEQ)) +
-  # overlay your measurement locations
-  geom_point(data = pts_plot,
-             aes(x = longitude, y = latitude),
-             color = "black", size = 2) +
-  scale_fill_viridis_c(name = "Pred LEQ (dB)", na.value = NA) +
-  coord_equal() +
-  labs(
-    title = "Geographic Noise Heatmap (IDW)",
-    x     = "Longitude",
-    y     = "Latitude"
-  ) +
-  theme_minimal() +
-  theme(
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank()
-  )
+noise_sf <- st_as_sf(noise_summary, coords = c("longitude", "latitude"), crs = 4326)
+coe_bounds <- read_sf("./geospatial_assets/coe_bounds/coe_bounds.shp")
+coe_bounds <- st_transform(coe_bounds, st_crs(noise_sf))
 
-dec_sf <- dec_filtered |>
-  st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
-
-grid <- st_make_grid(
-  st_bbox(dec_sf),
-  cellsize = 1000, # Adjust grid resolution as needed
-  what = "centers"
-) |> 
-  st_as_sf()
-
-grid_df <- grid |> st_coordinates() |> as_tibble()
-
-dec_hourly <- dec_hourly %>%
-  filter(latitude >= -90 & latitude <= 90, longitude >= -180 & longitude <= 180) %>%  # Valid coordinates
-  mutate(avg_LEQ_dB_A = ifelse(avg_LEQ_dB_A < 0, NA, avg_LEQ_dB_A))  # Remove invalid sound levels
-
-# Debugging: Print summary of the dataset
-print(summary(dec_hourly))
-
-# Plot heatmap
-heatmap_plot <- ggplot(dec_hourly, aes(x = longitude, y = latitude)) +
-  geom_tile(aes(fill = avg_LEQ_dB_A)) +  # Create heatmap
-  scale_fill_viridis_c(
-    name = "Noise Level (dB-A)",
-    option = "magma",
-    limits = range(dec_hourly$avg_LEQ_dB_A, na.rm = TRUE),  # Dynamic range
-    oob = scales::squish  # Handle values outside range
-  ) +
-  theme_minimal() +
-  coord_fixed() +  # Ensure proper aspect ratio for geographic data
-  labs(
-    title = "Heatmap of Noise Levels in Edmonton",
-    x = "Longitude",
-    y = "Latitude"
-  )
-
-
-
-# Step 2: Convert to sf object and transform to planar coordinates
-dec_hourly_sf <- st_as_sf(dec_hourly, coords = c("longitude", "latitude"), crs = 4326)
-dec_hourly_sf_planar <- st_transform(dec_hourly_sf, crs = 3857)
-
-
-grid <- st_make_grid(
-  st_as_sfc(edmonton_bbox),
-  cellsize = 0.01,  # 1 km grid cells (0.01 degrees ~ 1 km at mid-latitudes)
-  what = "centers"
-) %>%
-  st_as_sf()
-
-vgm_models <- list(
-  "Spherical" = vgm("Sph"),
-  "Exponential" = vgm("Exp"),
-  "Gaussian" = vgm("Gau")
+bbox <- st_bbox(coe_bounds)
+grd <- expand.grid(
+  x = seq(bbox["xmin"], bbox["xmax"], by = 0.001),
+  y = seq(bbox["ymin"], bbox["ymax"], by = 0.001)
 )
+coordinates(grd) <- ~x + y
+gridded(grd) <- TRUE
+crs(grd) <- st_crs(noise_sf)$wkt
 
-# Fit and plot each model
-for (model in names(vgm_models)) {
-  vgm_fit <- fit.variogram(variogram_model, model = vgm_models[[model]])
-  cat("\n", model, "\n")
-  plot(variogram_model, vgm_fit)
-}
+noise_sp <- as(noise_sf, "Spatial")
+idw_result <- gstat::idw(mean_LEQ ~ 1, noise_sp, newdata = grd, idp = 2.0)
 
-cv <- krige.cv(
-  formula = avg_LEQ_dB_A ~ 1,
-  locations = as(dec_hourly_sf, "Spatial"),
-  model = vgm_model
-)
+raster_idw <- raster(idw_result)
+raster_idw <- mask(raster_idw, as_Spatial(coe_bounds))
 
-# Summarize cross-validation results
-summary(cv)
-plot(cv$observed, cv$predicted, xlab = "Observed", ylab = "Predicted", main = "Cross-Validation")
-abline(0, 1, col = "red")
+raster_df <- as.data.frame(rasterToPoints(raster_idw))
+colnames(raster_df) <- c("x", "y", "mean_LEQ")
 
 ggplot() +
-  geom_sf(data = kriging_result_sf, aes(fill = var1.pred)) +
-  geom_sf(data = roads, color = "white", size = 0.2) +
-  scale_fill_viridis_c(name = "Predicted Noise (dB-A)", option = "magma") +
-  theme_minimal() +
-  labs(title = "Predicted Noise Levels") +
-  coord_sf()
-
-ggplot() +
-  geom_sf(data = kriging_result_sf, aes(fill = var1.var)) +
-  geom_sf(data = roads, color = "white", size = 0.2) +
-  scale_fill_viridis_c(name = "Prediction Variance", option = "inferno") +
-  theme_minimal() +
-  labs(title = "Prediction Variance (Uncertainty)") +
-  coord_sf()
-
-dec_hourly_grid <- dec_hourly %>%
-  mutate(
-    lon.group = cut(
-      longitude,
-      breaks = seq(floor(min(longitude)), ceiling(max(longitude)), by = 0.01),
-      labels = seq(floor(min(longitude)) + 0.005, ceiling(max(longitude)), by = 0.01)
-    ),
-    lat.group = cut(
-      latitude,
-      breaks = seq(floor(min(latitude)), ceiling(max(latitude)), by = 0.01),
-      labels = seq(floor(min(latitude)) + 0.005, ceiling(max(latitude)), by = 0.01)
-    )
-  ) %>%
-  group_by(lon.group, lat.group) %>%
-  summarise(
-    avg_LEQ_dB_A = mean(avg_LEQ_dB_A, na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  mutate(across(where(is.factor), ~ as.numeric(as.character(.x))))  # Convert factors to numeric
-
-# Heatmap visualization
-heatmap_plot <- ggplot(dec_hourly_grid, aes(x = lon.group, y = lat.group, fill = avg_LEQ_dB_A)) +
-  geom_raster() +  # Use raster for grid-like visualization
-  scale_fill_viridis_c(name = "Noise Level (dB-A)", option = "magma") +
-  coord_fixed() +  # Maintain aspect ratio
-  theme_minimal() +
-  labs(
-    title = "Heatmap of Noise Levels in Edmonton",
-    x = "Longitude",
-    y = "Latitude"
-  )
-
-roads <- st_read("geospatial_assets/Roads/Roads.shp")
-
-dec_hourly_sf <- dec_hourly_grid %>%
-  mutate(
-    lon = as.numeric(as.character(lon.group)),
-    lat = as.numeric(as.character(lat.group))
-  ) %>%
-  st_as_sf(coords = c("lon", "lat"), crs = 4326)
-
-st_bbox(dec_hourly_sf)
-st_bbox(roads)
-target_crs <- st_crs(roads)  # Use the CRS of `roads`
-dec_hourly_sf <- st_transform(dec_hourly_sf, crs = target_crs)
-variogram_model <- variogram(avg_LEQ_dB_A ~ 1, as(dec_hourly_sf, "Spatial"))
-vgm_model <- fit.variogram(variogram_model, model = vgm("Sph"))  # Spherical model
-plot(variogram_model, vgm_model)
-
-edmonton_bbox <- st_bbox(roads)  # Bounding box of Edmonton
-grid <- st_make_grid(
-  st_as_sfc(edmonton_bbox), 
-  cellsize = 0.001,  # Adjust cell size for resolution
-  what = "centers"
-) %>%
-  st_as_sf()
-
-# Clip the grid to the bounding box of Edmonton or roads
-grid <- st_intersection(grid, st_as_sfc(edmonton_bbox))
-
-kriging_result <- krige(
-  formula = avg_LEQ_dB_A ~ 1, 
-  locations = as(dec_hourly_sf, "Spatial"), 
-  newdata = as(grid, "Spatial"), 
-  model = vgm_model
-)
-
-# Convert the result back to an sf object
-kriging_result_sf <- st_as_sf(kriging_result)
-
-ggplot() +
-  geom_sf(data = kriging_result_sf, aes(fill = var1.pred)) +
-  geom_sf(data = roads, color = "white") +
-  scale_fill_viridis_c(option = "magma") +
+  geom_raster(data = raster_df, aes(x = x, y = y, fill = mean_LEQ)) +
+  geom_sf(data = coe_bounds, fill = NA, color = "black") +
+  scale_fill_viridis_c(name = "Interpolated LEQ (dB)", option = "inferno") +
+  coord_sf() +
+  labs(title = "Interpolated Noise Heatmap — Edmonton") +
   theme_minimal()
 
-road_buffer <- st_buffer(roads, dist = 50)  # Example buffer
-distance_to_roads <- st_distance(grid, road_buffer)
-
-# Include as a covariate in kriging
-kriging_result <- krige(
-  formula = avg_LEQ_dB_A ~ distance_to_roads,
-  locations = as(dec_hourly_sf, "Spatial"),
-  newdata = as(grid, "Spatial"),
-  model = vgm_model
-)
-
 ```
-
-# Results
-
-# Discussion

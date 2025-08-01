@@ -62,6 +62,8 @@ library(gstat)
 library(sp)
 library(rmapshaper)
 
+Sys.setenv(WT_USERNAME = "guest", WT_PASSWORD = "Apple123")
+
 load('coe.RData')
 #save.image('coe.RData')
 
@@ -395,7 +397,7 @@ print(savings)
 
 # Results
 
-## Kriging modelling
+## Noise modelling
 
 ```{r}
 #| eval: false 

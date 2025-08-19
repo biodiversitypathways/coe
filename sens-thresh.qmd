@@ -265,7 +265,8 @@ decibel_dates <- dir_ls("./spl/date/date", regexp = ".xls") |>
     sep = "\t"
   ) |>
   mutate(Time = ymd_hms(Time),
-         across(c(L_Max_dB_A, LEQ_dB_A, L_Min_dB_A, L_PeakdB_A), as.numeric))
+         across(c(L_Max_dB_A, LEQ_dB_A, L_Min_dB_A, L_PeakdB_A), as.numeric)) |>
+  mutate(location = gsub("\\.xls$", "", location))
 
 decibel_times <- dir_ls("./spl/time", regexp = ".xls") |>
   map_dfr(
@@ -287,14 +288,12 @@ decibel_times <- dir_ls("./spl/time", regexp = ".xls") |>
          start_time = start_time + seconds(Time)) |>
   dplyr::select(-Time) |>
   relocate(start_time) |>
-  rename(Time = start_time)
+  rename(Time = start_time) |>
+  mutate(location = gsub("\\.xls$", "", location))
 
 decibel_meter_data <- bind_rows(decibel_dates, decibel_times)
 
-coe_locations <- wt_get_locations("COE") |>
-  as_tibble() |>
-  unnest(everything()) |>
-  mutate(location = str_replace_all(location,"-",""))
+coe_locations <- read_csv("assets/COE_locations.csv")
 
 decibels_filtered <- decibel_meter_data |>
   group_by(location) |>
@@ -304,9 +303,9 @@ decibels_filtered <- decibel_meter_data |>
   group_by(location, Time_minute) |>
   filter(row_number() == 1) |>
   ungroup() |>
-  inner_join(coe_locations |> select(location, latitude, longitude), by = "location") |>
+  inner_join(coe_locations |> dplyr::select(location, latitude, longitude), by = "location") |>
   mutate(day_of_week = wday(Time, label = TRUE, abbr = TRUE)) |>
-  select(-8)
+  dplyr::select(-8)
 
 p1 <- decibels_filtered %>%
   mutate(hour = hour(Time)) %>%

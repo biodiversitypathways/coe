@@ -1,6 +1,8 @@
+#Start looking at sensitivity thresholds
+
 decs <- decibels_filtered |>
-  mutate(hour = hour(Time_minute),
-         julian = yday(Time_minute)) |>
+  mutate(hour = hour(Time),
+         julian = yday(Time)) |>
   group_by(location) |>
   summarise(mean = mean(LEQ_dB_A),
             sd = sd(LEQ_dB_A)) |>

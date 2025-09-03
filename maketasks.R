@@ -1,9 +1,9 @@
 wt_auth()
 
-wt_get_recordings(5466) |>
+wt_get_sync("organization_recording_summary", "data", organization = 5466) |>
   as_tibble() |>
   unnest(everything()) |>
-  filter(grepl('EET',location)) |>
+  filter(grepl('KIL|GLE|DEL',location)) |>
   mutate(recording_date_time = as.POSIXct(recording_date_time),
          julian = yday(recording_date_time),
          hour = hour(recording_date_time),
@@ -17,4 +17,4 @@ wt_get_recordings(5466) |>
   sample_n(1, replace = F) |>
   ungroup() |>
   rename(length_seconds = recording_length) |>
-  wt_make_aru_tasks(output = "/users/alexandremacphail/desktop/coeagain1.csv", task_method = "1SPT", task_length = 180)
+  wt_make_aru_tasks(output = "/users/alexandremacphail/desktop/coeagain2.csv", task_method = "1SPT", task_length = 180)

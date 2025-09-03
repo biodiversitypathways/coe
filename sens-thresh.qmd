@@ -61,11 +61,13 @@ library(raster)
 library(gstat)
 library(sp)
 library(rmapshaper)
+library(segmented)
+library(mgcv)
 
 Sys.setenv(WT_USERNAME = "guest", WT_PASSWORD = "Apple123")
 
 load('coe.RData')
-#save.image('coe.RData')
+save.image('coe.RData')
 
 ```
 
@@ -251,7 +253,7 @@ When a decibel meter is deployed, securely attach it to something in order to mi
 #| warning: false
 #| message: false
 
-decibel_dates <- dir_ls("./spl/date/date", regexp = ".xls") |>
+decibel_dates <- dir_ls("./spl/date", regexp = ".xls") |>
   map_dfr(
     ~read_csv(.x, skip = 2) |>
       mutate(
@@ -293,15 +295,12 @@ decibel_times <- dir_ls("./spl/time", regexp = ".xls") |>
 
 decibel_meter_data <- bind_rows(decibel_dates, decibel_times)
 
-coe_locations <- read_csv("assets/COE_locations.csv")
+coe_locations <- wt_get_sync("organization_locations","data",organization=5466)
 
 decibels_filtered <- decibel_meter_data |>
   group_by(location) |>
   mutate(Time_minute = floor_date(Time, "minute"),
          is_weekend = wday(Time, label = TRUE) %in% c("Sat", "Sun")) |> 
-  ungroup() |>
-  group_by(location, Time_minute) |>
-  filter(row_number() == 1) |>
   ungroup() |>
   inner_join(coe_locations |> dplyr::select(location, latitude, longitude), by = "location") |>
   mutate(day_of_week = wday(Time, label = TRUE, abbr = TRUE)) |>
